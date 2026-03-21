@@ -1,43 +1,46 @@
-import { LOADING_STATIONS, FUEL_ARM } from './fleet-data.js';
+import { LOADING_STATIONS } from './fleet-data.js';
 import { t } from './i18n.js';
 
 /**
  * DA40NG top-down schematic view with weight distribution indicators.
- * Each loading zone is clickable and shows current weight + color coding.
+ * Aircraft silhouette based on PA-28/SR-22 SVG shapes (GPL v3 / AircraftShapesSVG),
+ * adapted for DA40NG configuration: low-wing, single-engine, T-tail.
  */
 
-// Zone positions (relative to SVG viewBox 0 0 400 160)
+// Zone layout positions (SVG viewBox 0 0 500 180)
 const ZONES = [
-  { id: 'frontSeats', x: 140, y: 45, w: 60, h: 40, label: () => t('frontSeats') },
-  { id: 'rearSeats',  x: 210, y: 45, w: 50, h: 40, label: () => t('rearSeats') },
-  { id: 'stdBaggage', x: 268, y: 50, w: 40, h: 30, label: () => t('stdBaggage') },
-  { id: 'baggageTube', x: 315, y: 55, w: 35, h: 20, label: () => t('baggageTube') },
-  { id: 'fuel',       x: 105, y: 10, w: 70, h: 24, label: () => t('fuel') },
+  { id: 'frontSeats', x: 168, y: 68, w: 55, h: 44, label: () => t('frontSeats') },
+  { id: 'rearSeats',  x: 240, y: 72, w: 45, h: 36, label: () => t('rearSeats') },
+  { id: 'stdBaggage', x: 298, y: 76, w: 40, h: 28, label: () => t('stdBaggage') },
+  { id: 'baggageTube', x: 348, y: 80, w: 35, h: 20, label: () => t('baggageTube') },
+  { id: 'fuel',       x: 115, y: 16, w: 80, h: 22, label: () => t('fuel') },
 ];
 
 function getZoneColor(ratio) {
-  if (ratio === 0) return 'rgba(255,255,255,0.06)';
-  if (ratio <= 0.7) return 'rgba(76,175,80,0.25)';
-  if (ratio <= 0.9) return 'rgba(255,193,7,0.3)';
-  if (ratio <= 1.0) return 'rgba(255,152,0,0.35)';
-  return 'rgba(244,67,54,0.4)';
+  if (ratio === 0) return 'rgba(255,255,255,0.04)';
+  if (ratio <= 0.7) return 'rgba(76,175,80,0.2)';
+  if (ratio <= 0.9) return 'rgba(255,193,7,0.25)';
+  if (ratio <= 1.0) return 'rgba(255,152,0,0.3)';
+  return 'rgba(244,67,54,0.35)';
 }
 
 function getZoneBorder(ratio) {
-  if (ratio === 0) return 'rgba(255,255,255,0.15)';
+  if (ratio === 0) return 'rgba(255,255,255,0.12)';
   if (ratio <= 0.7) return '#4CAF50';
   if (ratio <= 0.9) return '#FFC107';
   if (ratio <= 1.0) return '#FF9800';
   return '#f44336';
 }
 
+function getTextColor(ratio) {
+  if (ratio === 0) return 'rgba(255,255,255,0.2)';
+  return getZoneBorder(ratio);
+}
+
 export function renderAircraftView(container, stationMasses, fuelLiters, maxFuelLiters) {
   const stationMap = {};
-  for (const s of LOADING_STATIONS) {
-    stationMap[s.id] = s;
-  }
+  for (const s of LOADING_STATIONS) stationMap[s.id] = s;
 
-  // Build zone data
   const zoneData = ZONES.map(z => {
     let mass, maxMass, ratio;
     if (z.id === 'fuel') {
@@ -53,57 +56,109 @@ export function renderAircraftView(container, stationMasses, fuelLiters, maxFuel
     return { ...z, mass, maxMass, ratio };
   });
 
+  const acFill = 'rgba(255,255,255,0.03)';
+  const acStroke = 'rgba(255,255,255,0.18)';
+  const acStrokeW = '1.2';
+
   const svg = `
-<svg viewBox="0 0 400 130" xmlns="http://www.w3.org/2000/svg" class="aircraft-svg">
-  <!-- Fuselage -->
-  <path d="M 60,65 Q 30,65 15,60 Q 5,55 2,50 Q 5,45 15,40 Q 30,35 60,35
-           L 310,30 Q 340,28 360,32 Q 375,38 380,50
-           Q 375,62 360,68 Q 340,72 310,70 L 60,65 Z"
-        fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+<svg viewBox="0 0 500 180" xmlns="http://www.w3.org/2000/svg" class="aircraft-svg">
+  <!-- Fuselage - sleek low-wing body -->
+  <path d="M 50,90
+           C 35,90 20,87 12,84 C 6,81 3,78 2,75
+           L 0,75 L 0,105 L 2,105
+           C 3,102 6,99 12,96 C 20,93 35,90 50,90 Z"
+        fill="${acFill}" stroke="${acStroke}" stroke-width="${acStrokeW}"/>
+  <path d="M 50,75 C 50,75 55,65 70,62 L 155,58 L 300,55
+           C 340,54 370,56 395,62 C 410,66 418,72 420,78
+           L 420,102
+           C 418,108 410,114 395,118 C 370,124 340,126 300,125
+           L 155,122 L 70,118 C 55,115 50,105 50,105 Z"
+        fill="${acFill}" stroke="${acStroke}" stroke-width="${acStrokeW}"/>
 
-  <!-- Wings -->
-  <path d="M 120,50 L 80,8 Q 78,4 82,3 L 180,3 Q 184,4 182,8 L 170,40"
-        fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-  <path d="M 120,50 L 80,92 Q 78,96 82,97 L 180,97 Q 184,96 182,92 L 170,60"
-        fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <!-- Nose cone -->
+  <path d="M 50,75 C 42,77 35,80 30,83 C 25,86 20,88 15,89
+           L 3,90
+           L 15,91 C 20,92 25,94 30,97 C 35,100 42,103 50,105"
+        fill="${acFill}" stroke="${acStroke}" stroke-width="${acStrokeW}"/>
 
-  <!-- Tail -->
-  <path d="M 350,50 L 370,18 Q 372,14 376,15 L 395,22 Q 398,24 396,28 L 380,42"
-        fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-  <path d="M 350,50 L 370,82 Q 372,86 376,85 L 395,78 Q 398,76 396,72 L 380,58"
-        fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <!-- Spinner/Propeller -->
+  <ellipse cx="3" cy="90" rx="2" ry="4" fill="rgba(255,255,255,0.08)" stroke="${acStroke}" stroke-width="0.8"/>
+  <line x1="1" y1="70" x2="1" y2="110" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-linecap="round"/>
 
-  <!-- Propeller -->
-  <line x1="2" y1="35" x2="2" y2="65" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+  <!-- Wings - low mounted, swept trailing edge -->
+  <path d="M 130,72 L 105,30 C 103,26 100,22 100,18 L 100,14
+           C 100,12 102,10 105,10 L 210,8 C 213,8 215,10 215,12
+           L 215,15 C 215,18 212,24 210,28 L 195,62"
+        fill="${acFill}" stroke="${acStroke}" stroke-width="${acStrokeW}"/>
+  <path d="M 130,108 L 105,150 C 103,154 100,158 100,162 L 100,166
+           C 100,168 102,170 105,170 L 210,172 C 213,172 215,170 215,168
+           L 215,165 C 215,162 212,156 210,152 L 195,118"
+        fill="${acFill}" stroke="${acStroke}" stroke-width="${acStrokeW}"/>
 
-  <!-- Engine -->
-  <rect x="8" y="42" width="30" height="16" rx="3"
-        fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+  <!-- Wing fuel tank indicators (inside wings) -->
+  <rect x="120" y="20" width="70" height="14" rx="3"
+        fill="rgba(76,175,80,0.06)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5" stroke-dasharray="3,2"/>
+  <rect x="120" y="146" width="70" height="14" rx="3"
+        fill="rgba(76,175,80,0.06)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5" stroke-dasharray="3,2"/>
 
-  <!-- Loading zones -->
-  ${zoneData.map(z => `
+  <!-- Horizontal Stabilizer (T-tail - mounted high) -->
+  <path d="M 405,78 L 430,52 C 432,50 435,48 438,48 L 470,46
+           C 473,46 475,48 474,50 L 460,72 L 435,78"
+        fill="${acFill}" stroke="${acStroke}" stroke-width="${acStrokeW}"/>
+  <path d="M 405,102 L 430,128 C 432,130 435,132 438,132 L 470,134
+           C 473,134 475,132 474,130 L 460,108 L 435,102"
+        fill="${acFill}" stroke="${acStroke}" stroke-width="${acStrokeW}"/>
+
+  <!-- Vertical Stabilizer (center line, T-tail) -->
+  <rect x="410" y="84" width="28" height="12" rx="2"
+        fill="rgba(255,255,255,0.05)" stroke="${acStroke}" stroke-width="0.8"/>
+
+  <!-- Windshield -->
+  <path d="M 145,68 C 150,64 160,62 170,62 L 185,62
+           C 195,62 205,64 210,68 L 210,72
+           C 205,70 195,68 185,68 L 170,68
+           C 160,68 150,70 145,72 Z"
+        fill="rgba(100,180,255,0.08)" stroke="rgba(100,180,255,0.2)" stroke-width="0.8"/>
+  <path d="M 145,112 C 150,116 160,118 170,118 L 185,118
+           C 195,118 205,116 210,112 L 210,108
+           C 205,110 195,112 185,112 L 170,112
+           C 160,112 150,110 145,108 Z"
+        fill="rgba(100,180,255,0.08)" stroke="rgba(100,180,255,0.2)" stroke-width="0.8"/>
+
+  <!-- Main landing gear -->
+  <rect x="155" y="55" width="4" height="8" rx="1" fill="rgba(255,255,255,0.1)"/>
+  <rect x="155" y="117" width="4" height="8" rx="1" fill="rgba(255,255,255,0.1)"/>
+
+  <!-- Nose gear -->
+  <rect x="60" y="87" width="3" height="6" rx="1" fill="rgba(255,255,255,0.1)"/>
+
+  <!-- Loading zones with labels -->
+  ${zoneData.map(z => {
+    const massText = z.id === 'fuel' ? `${z.mass} L` : (z.mass > 0 ? `${z.mass} kg` : '—');
+    const maxText = z.id === 'fuel' ? `max ${z.maxMass} L` : `max ${z.maxMass} kg`;
+    return `
     <rect x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="4"
           fill="${getZoneColor(z.ratio)}" stroke="${getZoneBorder(z.ratio)}" stroke-width="1.5"
           class="zone-rect" data-zone="${z.id}" style="cursor:pointer"/>
-    <text x="${z.x + z.w/2}" y="${z.y + z.h/2 - 2}" text-anchor="middle"
-          fill="${getZoneBorder(z.ratio)}" font-size="8" font-weight="bold" pointer-events="none">
-      ${z.id === 'fuel' ? z.mass + ' L' : (z.mass > 0 ? z.mass + ' kg' : '')}
+    <text x="${z.x + z.w/2}" y="${z.y + z.h/2}" text-anchor="middle" dominant-baseline="central"
+          fill="${getTextColor(z.ratio)}" font-size="9" font-weight="bold" pointer-events="none">
+      ${massText}
     </text>
-    <text x="${z.x + z.w/2}" y="${z.y + z.h/2 + 9}" text-anchor="middle"
-          fill="rgba(255,255,255,0.4)" font-size="6" pointer-events="none">
-      ${z.id === 'fuel' ? '/ ' + z.maxMass + ' L' : (z.maxMass > 0 ? '/ ' + z.maxMass + ' kg' : '')}
-    </text>
-  `).join('')}
+    <text x="${z.x + z.w/2}" y="${z.y + z.h + 10}" text-anchor="middle"
+          fill="rgba(255,255,255,0.25)" font-size="6.5" pointer-events="none">
+      ${maxText}
+    </text>`;
+  }).join('')}
 
-  <!-- CG indicator line -->
-  <text x="200" y="125" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="8">
-    ← FWD          AFT →
+  <!-- Axis reference -->
+  <text x="250" y="175" text-anchor="middle" fill="rgba(255,255,255,0.2)" font-size="8" letter-spacing="3">
+    ← FWD                                        AFT →
   </text>
 </svg>`;
 
   container.innerHTML = svg;
 
-  // Click handler — focus the corresponding input
+  // Click zones to focus corresponding input
   container.querySelectorAll('.zone-rect').forEach(rect => {
     rect.addEventListener('click', () => {
       const zoneId = rect.getAttribute('data-zone');
