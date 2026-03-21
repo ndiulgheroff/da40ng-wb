@@ -16,6 +16,7 @@ function renderAircraftList() {
     card.innerHTML = `
       <div class="reg">${ac.registration}</div>
       <div class="detail">${ac.emptyWeight} kg · MTOM ${ac.maxTakeoffMass}</div>
+      <div class="detail">${t('lastWeighing')}: ${ac.lastWeighing}</div>
     `;
     card.addEventListener('click', () => {
       selectedAircraft = ac;
