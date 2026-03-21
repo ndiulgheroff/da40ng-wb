@@ -266,10 +266,14 @@ function renderUI() {
 
 // --- Init (runs once) ---
 function initUI() {
-  // Set today's date
+  // Set today's date in dd/mm/yyyy format
   const dateInput = document.getElementById('flightDate');
   if (!dateInput.value) {
-    dateInput.value = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, '0');
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const yyyy = now.getFullYear();
+    dateInput.value = `${dd}/${mm}/${yyyy}`;
   }
 
   // Bind events ONCE
