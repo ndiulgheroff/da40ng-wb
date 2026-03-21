@@ -63,7 +63,7 @@ function renderCalcTable() {
       <td>${station.arm.toFixed(2)}</td>
       <td style="text-align:right">
         <input class="mass-input station-input" type="number" min="0" max="${station.maxKg}"
-               step="0.1" value="0" data-station="${station.id}" data-max="${station.maxKg}">
+               step="0.1" value="0" data-station="${station.id}" data-max="${station.maxKg}" inputmode="decimal">
       </td>
       <td style="text-align:right" class="moment-cell" data-station-moment="${station.id}">0.00</td>
     `;
