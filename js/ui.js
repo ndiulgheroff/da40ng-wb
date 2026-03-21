@@ -2,6 +2,7 @@ import { FLEET, LOADING_STATIONS, FUEL_DENSITY, FUEL_ARM, MAX_FUEL_LITERS } from
 import { calculate } from './calculator.js';
 import { renderEnvelope } from './cg-envelope.js';
 import { t, getLang, setLang } from './i18n.js';
+import { setPrintOptions, initPdfExport } from './pdf-export.js';
 
 let selectedAircraft = null;
 
@@ -161,6 +162,15 @@ function recalculate() {
     massFull: result.totalMass,
     cgFullInLimits: result.cgFullInLimits === 1,
   });
+
+  setPrintOptions({
+    maxTakeoffMass: selectedAircraft.maxTakeoffMass,
+    cgNoFuel: result.cgNoFuel,
+    massNoFuel: result.totalNoFuelMass,
+    cgFull: result.cgFull,
+    massFull: result.totalMass,
+    cgFullInLimits: result.cgFullInLimits === 1,
+  });
 }
 
 // --- Results Panel ---
@@ -274,6 +284,8 @@ function initUI() {
   });
 
   document.getElementById('btnPdf').addEventListener('click', () => window.print());
+
+  initPdfExport(document.getElementById('cgCanvas'));
 
   // Initial render
   renderUI();
