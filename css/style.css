@@ -317,29 +317,54 @@ body {
 
 /* Print styles */
 @media print {
-  body { background: white; color: black; font-size: 11px; }
-  .topbar { background: white; color: black; border-bottom: 2px solid black; }
+  * { color-adjust: exact; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: white !important; color: black !important; font-size: 11px; }
+  .topbar { background: white !important; color: black !important; border-bottom: 2px solid black; }
+  .topbar-title, .topbar-subtitle { color: black !important; opacity: 1 !important; }
   .topbar-actions .lang-btn { display: none; }
   .topbar-actions .dropdown { display: none; }
   .panel-left .aircraft-card:not(.selected) { display: none; }
-  .aircraft-card { border-color: black; }
+  .aircraft-card { border-color: black !important; background: white !important; }
+  .aircraft-card .reg { color: black !important; }
+  .aircraft-card .detail { color: #333 !important; }
   .dashboard { display: block; }
   .panel-left, .panel-center, .panel-right {
-    background: white;
+    background: white !important;
     border: none;
     page-break-inside: avoid;
   }
+  .section-label { color: #333 !important; }
+  .field-label { color: #333 !important; }
   .mass-input, .field-input {
     border: none;
-    background: none;
+    background: none !important;
     font-weight: bold;
+    color: black !important;
   }
-  .result-card {
-    border-color: #333;
-    background: none;
-  }
-  .canvas-container { background: transparent; border-color: #333; }
-  .warning-banner { border-color: red; }
+  .calc-table th { color: #333 !important; }
+  .calc-table td { color: black !important; border-bottom-color: #ccc !important; }
+  .calc-table tr { background: white !important; }
+  .calc-table tr.auto-filled { color: #2E7D32 !important; }
+  .subtotal-row.no-fuel { color: #e65100 !important; }
+  .subtotal-row.with-fuel { color: #2E7D32 !important; }
+  .moment-cell { color: #333 !important; }
+  .fuel-section { background: #f1f8e9 !important; border-color: #2E7D32 !important; }
+  .fuel-section, .fuel-section * { color: black !important; }
+  .fuel-label { color: #333 !important; }
+  #fuelMassDisplay, #fuelMomentDisplay { color: black !important; }
+  .result-card { border-color: #333 !important; background: white !important; }
+  .result-card .result-label { color: #333 !important; }
+  .result-card .result-value { color: black !important; }
+  .result-card.ok .result-value { color: #2E7D32 !important; }
+  .result-card.ok .result-status { color: #2E7D32 !important; }
+  .result-card.fail .result-value { color: #c62828 !important; }
+  .result-card.fail .result-status { color: #c62828 !important; }
+  .result-card.ref .result-value { color: #e65100 !important; }
+  .result-card.ref .result-status { color: #e65100 !important; }
+  .result-card.neutral .result-value { color: black !important; }
+  .canvas-container { background: transparent !important; border-color: #333 !important; }
+  .warning-banner { border-color: red !important; color: red !important; background: #fff0f0 !important; }
+  .flight-info { border-top-color: #ccc !important; }
 
   .print-footer {
     display: block;

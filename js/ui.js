@@ -123,6 +123,10 @@ function recalculate() {
   const result = calculate({ aircraft: selectedAircraft, stationMasses, fuelLiters });
   lastResult = result;
 
+  // Update page title for PDF filename
+  const dateVal = document.getElementById('flightDate').value.replace(/\//g, '-');
+  document.title = `WB_${selectedAircraft.registration}_${dateVal}`;
+
   // Update station moments
   for (const station of LOADING_STATIONS) {
     const cell = document.querySelector(`[data-station-moment="${station.id}"]`);
