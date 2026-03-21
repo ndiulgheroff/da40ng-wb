@@ -145,6 +145,17 @@ body {
   border-collapse: collapse;
   font-size: 13px;
 }
+.aircraft-view-container {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 12px;
+}
+.aircraft-svg { width: 100%; height: auto; display: block; }
+.aircraft-svg .zone-rect { transition: fill 0.3s, stroke 0.3s; }
+.aircraft-svg .zone-rect:hover { filter: brightness(1.3); }
+
 .calc-table th {
   text-align: left;
   padding: 6px 4px;
@@ -340,6 +351,10 @@ body {
   .result-card.ref .result-status { color: #e65100 !important; }
   .result-card.neutral .result-value { color: black !important; }
   .canvas-container { background: transparent !important; border-color: #333 !important; }
+  .aircraft-view-container { background: white !important; border-color: #ccc !important; }
+  .aircraft-svg path, .aircraft-svg line { stroke: #333 !important; }
+  .aircraft-svg rect.zone-rect { stroke-width: 1 !important; }
+  .aircraft-svg text { fill: #333 !important; }
   .warning-banner { border-color: red !important; color: red !important; background: #fff0f0 !important; }
   .disclaimer { background: none !important; border-color: #999 !important; color: #333 !important; margin: 8px 0 !important; }
   .flight-info { border-top-color: #ccc !important; }

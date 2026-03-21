@@ -1,6 +1,7 @@
 import { FLEET, LOADING_STATIONS, FUEL_DENSITY, FUEL_ARM, MAX_FUEL_LITERS, TANK_CONFIGS } from './fleet-data.js';
 import { calculate } from './calculator.js';
 import { renderEnvelope, renderMomentRange } from './cg-envelope.js';
+import { renderAircraftView } from './aircraft-view.js';
 import { t, getLang, setLang } from './i18n.js';
 import { setPrintOptions, initPdfExport } from './pdf-export.js';
 
@@ -192,6 +193,12 @@ function recalculate() {
   // Moment Range Diagram (6.4.5)
   renderMomentRange(document.getElementById('momentCanvas'), chartOpts);
 
+  // Aircraft top-down view
+  renderAircraftView(
+    document.getElementById('aircraftView'),
+    stationMasses, fuelLiters, getMaxFuel()
+  );
+
   setPrintOptions({
     ...chartOpts,
   });
@@ -284,6 +291,10 @@ function renderUI() {
         <div class="result-label">${t('selectAircraft')}</div>
       </div>
     `;
+    // Empty aircraft view
+    const emptyMasses = {};
+    LOADING_STATIONS.forEach(s => emptyMasses[s.id] = 0);
+    renderAircraftView(document.getElementById('aircraftView'), emptyMasses, 0, getMaxFuel());
   }
 }
 
