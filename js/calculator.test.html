@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html><head><title>Calculator Tests</title></head>
+<body>
+<pre id="output"></pre>
+<script type="module">
+import { calculate } from './calculator.js';
+import { FLEET, LOADING_STATIONS, FUEL_DENSITY, FUEL_ARM, MAX_FUEL_LITERS } from './fleet-data.js';
+
+const log = (msg) => { document.getElementById('output').textContent += msg + '\n'; };
+let passed = 0, failed = 0;
+
+function assert(name, actual, expected, tolerance = 0.01) {
+  if (Math.abs(actual - expected) <= tolerance) {
+    log(`✓ ${name}`);
+    passed++;
+  } else {
+    log(`✗ ${name}: expected ${expected}, got ${actual}`);
+    failed++;
+  }
+}
+
+// Test 1: Empty aircraft OE-DDA with 150kg front seats, 20kg baggage, 148L fuel
+const result1 = calculate({
+  aircraft: FLEET[0], // OE-DDA
+  stationMasses: { frontSeats: 150, rearSeats: 0, stdBaggage: 20, baggageTube: 0, shortBagExt: 0, fwdExtBag: 0, aftExtBag: 0 },
+  fuelLiters: 148,
+});
+
+log('=== Test 1: OE-DDA example from PDF ===');
+assert('empty weight',       result1.emptyMass,     939.65);
+assert('empty moment',       result1.emptyMoment,   2294.80);
+assert('front seats moment', result1.stationMoments.frontSeats, 345.0);
+assert('baggage moment',     result1.stationMoments.stdBaggage, 73.0);
+assert('total no-fuel mass', result1.totalNoFuelMass, 1109.65);
+assert('fuel mass',          result1.fuelMass,       124.32);
+assert('fuel moment',        result1.fuelMoment,     326.96, 0.1);
+assert('total mass',         result1.totalMass,      1233.97, 0.1);
+assert('CG no-fuel',        result1.cgNoFuel,       2.445, 0.01);
+assert('CG with fuel',      result1.cgFull,         2.463, 0.01);
+assert('CG full in limits', result1.cgFullInLimits,  1);
+assert('mass in limits',    result1.massInLimits,    1);
+
+// Test 2: OE-DDB overweight scenario
+const result2 = calculate({
+  aircraft: FLEET[1], // OE-DDB, MTOM 1280
+  stationMasses: { frontSeats: 200, rearSeats: 80, stdBaggage: 18, baggageTube: 0, shortBagExt: 0, fwdExtBag: 0, aftExtBag: 0 },
+  fuelLiters: 148,
+});
+
+log('\n=== Test 2: OE-DDB overweight ===');
+assert('total mass',      result2.totalMass, 913.73 + 200 + 80 + 18 + 148*0.84, 0.1);
+assert('mass in limits',  result2.massInLimits, 0); // should exceed 1280
+
+// Test 3: Station limit violations
+log('\n=== Test 3: Station limit checks ===');
+assert('front seats over', result2.stationWarnings.frontSeats, 0); // 200 = max, not over
+const result3 = calculate({
+  aircraft: FLEET[0],
+  stationMasses: { frontSeats: 201, rearSeats: 0, stdBaggage: 19, baggageTube: 0, shortBagExt: 0, fwdExtBag: 0, aftExtBag: 0 },
+  fuelLiters: 0,
+});
+assert('front seats 201 over', result3.stationWarnings.frontSeats, 1);
+assert('baggage 19 over',      result3.stationWarnings.stdBaggage, 1);
+
+// Test 4: Zero pilot weight
+log('\n=== Test 4: Zero pilot ===');
+const result4 = calculate({
+  aircraft: FLEET[0],
+  stationMasses: { frontSeats: 0, rearSeats: 0, stdBaggage: 0, baggageTube: 0, shortBagExt: 0, fwdExtBag: 0, aftExtBag: 0 },
+  fuelLiters: 0,
+});
+assert('no pilot warning', result4.noPilotWarning, 1);
+
+log(`\n=== Results: ${passed} passed, ${failed} failed ===`);
+</script>
+</body></html>
