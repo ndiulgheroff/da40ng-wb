@@ -1,4 +1,4 @@
-import { CG_ENVELOPES } from './fleet-data.js';
+import { CG_ENVELOPES, MAX_ZERO_FUEL_MASS } from './fleet-data.js';
 import { t } from './i18n.js';
 
 const MARGIN = { top: 40, right: 30, bottom: 50, left: 70 };
@@ -82,7 +82,7 @@ export function renderEnvelope(canvas, options, printMode = false) {
     ctx.restore();
   }
   dashLine(options.maxTakeoffMass, `MTOM ${options.maxTakeoffMass} kg`);
-  dashLine(1200, 'Max Zero Fuel Mass 1200 kg');
+  dashLine(MAX_ZERO_FUEL_MASS, `Max Zero Fuel Mass ${MAX_ZERO_FUEL_MASS} kg`);
 
   // Axes labels
   ctx.fillStyle = fg;
@@ -247,7 +247,7 @@ export function renderMomentRange(canvas, options, printMode = false) {
     ctx.restore();
   }
   dashLine(options.maxTakeoffMass, `MTOM ${options.maxTakeoffMass} kg`);
-  dashLine(1200, 'Max Zero Fuel Mass 1200 kg');
+  dashLine(MAX_ZERO_FUEL_MASS, `Max Zero Fuel Mass ${MAX_ZERO_FUEL_MASS} kg`);
 
   // Axes
   ctx.fillStyle = fg;

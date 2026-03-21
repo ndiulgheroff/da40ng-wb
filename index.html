@@ -18,13 +18,7 @@
     <button class="lang-btn active" data-lang="it">IT</button>
     <button class="lang-btn" data-lang="en">EN</button>
     <button class="btn-reset" id="btnReset" data-i18n="reset">Reset</button>
-    <div class="dropdown" id="exportDropdown">
-      <button class="btn-pdf" id="btnExport">📄 <span data-i18n="export">Esporta</span> ▾</button>
-      <div class="dropdown-menu" id="exportMenu">
-        <button class="dropdown-item" id="btnDownloadPdf" data-i18n="downloadPdf">Scarica PDF</button>
-        <button class="dropdown-item" id="btnPrint" data-i18n="print">Stampa</button>
-      </div>
-    </div>
+    <button class="btn-pdf" id="btnPrint" data-i18n="printSavePdf">Stampa / Salva PDF</button>
   </div>
 </div>
 
@@ -53,8 +47,8 @@
       <div class="field-group">
         <div class="field-label" data-i18n="tankConfig">Configurazione Serbatoi</div>
         <select class="field-input" id="tankConfigSelect">
-          <option value="longRange" selected>Long Range Tank (148 L)</option>
-          <option value="standard">Standard Tank (106 L)</option>
+          <option value="longRange" selected data-i18n="longRange">Long Range Tank (148 L)</option>
+          <option value="standard" data-i18n="standard">Standard Tank (106 L)</option>
         </select>
       </div>
     </div>
@@ -76,23 +70,23 @@
       <tbody id="calcBody"></tbody>
     </table>
 
-    <!-- Fuel section -->
+    <!-- Fuel section (Station 10) -->
     <div class="fuel-section">
       <div class="fuel-header">
-        <span>⛽ <span data-i18n="fuel">Carburante</span> (0.84 kg/L) — Max: <span id="maxFuelDisplay">148</span> L</span>
-        <span style="font-size:11px;color:var(--text-secondary);">Arm: 2.63 m</span>
+        <span><b>10.</b> <span data-i18n="fuel">Carburante</span> (0.84 kg/L) — Max: <span id="maxFuelDisplay">148</span> L</span>
+        <span class="fuel-arm-label"><span data-i18n="armLabel">Braccio</span>: 2.63 m</span>
       </div>
       <div class="fuel-input-row">
         <div>
           <div class="fuel-label" data-i18n="fuelLiters">Litri</div>
           <input class="mass-input" type="number" id="fuelInput" min="0" max="148" step="1" value="0">
         </div>
-        <div style="color:var(--text-muted);">→</div>
+        <div class="fuel-arrow">→</div>
         <div>
           <div class="fuel-label" data-i18n="massKg">Massa (kg)</div>
           <span id="fuelMassDisplay">0.00</span>
         </div>
-        <div style="color:var(--text-muted);">→</div>
+        <div class="fuel-arrow">→</div>
         <div>
           <div class="fuel-label" data-i18n="momentKgm">Momento (kgm)</div>
           <span id="fuelMomentDisplay">0.00</span>

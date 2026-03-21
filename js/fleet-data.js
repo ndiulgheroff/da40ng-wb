@@ -16,6 +16,7 @@ export const TANK_CONFIGS = {
   standard:  { id: 'standard',  maxFuelLiters: 106, labelIt: 'Standard Tank',   labelEn: 'Standard Tank' },
 };
 export const MAX_FUEL_LITERS = 148; // default, overridden by selected tank config
+export const MAX_ZERO_FUEL_MASS = 1200; // kg, per AFM
 
 export const LOADING_STATIONS = [
   { id: 'frontSeats',    arm: 2.30, maxKg: 200, labelIt: 'Sedili anteriori',               labelEn: 'Front seats' },

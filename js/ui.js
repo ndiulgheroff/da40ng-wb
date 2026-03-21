@@ -301,6 +301,7 @@ function initUI() {
 
   // Bind events ONCE
   const fuelInput = document.getElementById('fuelInput');
+  fuelInput.max = getMaxFuel();
   fuelInput.addEventListener('input', () => recalculate());
   fuelInput.addEventListener('change', () => { sanitizeInput(fuelInput); recalculate(); });
 
@@ -334,32 +335,9 @@ function initUI() {
     });
   });
 
-  // Export dropdown
-  const btnExport = document.getElementById('btnExport');
-  const exportMenu = document.getElementById('exportMenu');
-
-  btnExport.addEventListener('click', (e) => {
-    e.stopPropagation();
-    exportMenu.classList.toggle('open');
-  });
-
-  // Close dropdown when clicking outside
-  document.addEventListener('click', () => {
-    exportMenu.classList.remove('open');
-  });
-
-  // Print button
-  document.getElementById('btnPrint').addEventListener('click', (e) => {
-    e.stopPropagation();
-    exportMenu.classList.remove('open');
-    setTimeout(() => window.print(), 100);
-  });
-
-  // Save as PDF — same print dialog, user selects "Save as PDF" as destination
-  document.getElementById('btnDownloadPdf').addEventListener('click', (e) => {
-    e.stopPropagation();
-    exportMenu.classList.remove('open');
-    setTimeout(() => window.print(), 100);
+  // Print / Save PDF button
+  document.getElementById('btnPrint').addEventListener('click', () => {
+    window.print();
   });
 
   initPdfExport(document.getElementById('cgCanvas'), document.getElementById('momentCanvas'));
