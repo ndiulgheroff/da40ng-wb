@@ -53,6 +53,17 @@ body {
   border-color: rgba(255,255,255,0.6);
 }
 
+.btn-reset {
+  background: none;
+  border: 1px solid var(--orange);
+  color: var(--orange);
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.btn-reset:hover { background: rgba(255,152,0,0.1); }
+
 .btn-pdf {
   background: var(--green);
   border: none;
@@ -323,6 +334,7 @@ body {
   .topbar-title, .topbar-subtitle { color: black !important; opacity: 1 !important; }
   .topbar-actions .lang-btn { display: none; }
   .topbar-actions .dropdown { display: none; }
+  .topbar-actions .btn-reset { display: none; }
   .panel-left .aircraft-card:not(.selected) { display: none; }
   .aircraft-card { border-color: black !important; background: white !important; }
   .aircraft-card .reg { color: black !important; }

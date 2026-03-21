@@ -311,6 +311,22 @@ function initUI() {
     recalculate();
   });
 
+  // Reset button
+  document.getElementById('btnReset').addEventListener('click', () => {
+    selectedAircraft = null;
+    lastResult = null;
+    document.getElementById('instructorName').value = '';
+    document.getElementById('studentName').value = '';
+    const now = new Date();
+    document.getElementById('flightDate').value = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
+    document.getElementById('fuelInput').value = 0;
+    document.getElementById('tankConfigSelect').value = 'longRange';
+    selectedTankConfig = TANK_CONFIGS.longRange;
+    document.getElementById('fuelInput').max = getMaxFuel();
+    document.title = 'DA40NG Mass & Balance — Urbe Flight School';
+    renderUI();
+  });
+
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       setLang(btn.dataset.lang);
