@@ -5,6 +5,7 @@ import { t, getLang, setLang } from './i18n.js';
 import { setPrintOptions, initPdfExport } from './pdf-export.js';
 
 let selectedAircraft = null;
+let lastResult = null;
 
 // --- Aircraft List ---
 function renderAircraftList() {
@@ -120,6 +121,7 @@ function recalculate() {
   const fuelLiters = parseFloat(document.getElementById('fuelInput').value) || 0;
 
   const result = calculate({ aircraft: selectedAircraft, stationMasses, fuelLiters });
+  lastResult = result;
 
   // Update station moments
   for (const station of LOADING_STATIONS) {
@@ -318,52 +320,98 @@ function initUI() {
     window.print();
   });
 
-  // Download PDF button — generates and downloads a real PDF file
-  document.getElementById('btnDownloadPdf').addEventListener('click', async () => {
+  // Download PDF — opens a clean print-ready page in a new window for saving as PDF
+  document.getElementById('btnDownloadPdf').addEventListener('click', () => {
     exportMenu.classList.remove('open');
-    const btn = document.getElementById('btnDownloadPdf');
-    btn.textContent = '...';
-    btn.disabled = true;
+    if (!selectedAircraft) return;
 
-    try {
-      // Temporarily apply print-like styles for capture
-      document.body.classList.add('pdf-capture');
+    // Render CG diagram in print mode to get a clean canvas
+    const cgCanvas = document.getElementById('cgCanvas');
+    const origDpr = window.devicePixelRatio;
+    Object.defineProperty(window, 'devicePixelRatio', { value: 2, writable: true, configurable: true });
+    renderEnvelope(cgCanvas, {
+      maxTakeoffMass: selectedAircraft.maxTakeoffMass,
+      cgNoFuel: lastResult.cgNoFuel,
+      massNoFuel: lastResult.totalNoFuelMass,
+      cgFull: lastResult.cgFull,
+      massFull: lastResult.totalMass,
+      cgFullInLimits: lastResult.cgFullInLimits === 1,
+    }, true);
+    const cgImageData = cgCanvas.toDataURL('image/png');
+    // Restore normal rendering
+    Object.defineProperty(window, 'devicePixelRatio', { value: origDpr, writable: true, configurable: true });
+    renderEnvelope(cgCanvas, {
+      maxTakeoffMass: selectedAircraft.maxTakeoffMass,
+      cgNoFuel: lastResult.cgNoFuel,
+      massNoFuel: lastResult.totalNoFuelMass,
+      cgFull: lastResult.cgFull,
+      massFull: lastResult.totalMass,
+      cgFullInLimits: lastResult.cgFullInLimits === 1,
+    });
 
-      const element = document.body;
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-      });
+    // Build station rows
+    let stationRows = '';
+    const masses = getStationMasses();
+    stationRows += `<tr style="color:#2E7D32"><td>1</td><td>${t('emptyMass')}</td><td>${selectedAircraft.emptyArm.toFixed(3)}</td><td style="text-align:right">${selectedAircraft.emptyWeight.toFixed(2)}</td><td style="text-align:right">${selectedAircraft.emptyMoment.toFixed(2)}</td></tr>`;
+    LOADING_STATIONS.forEach((s, i) => {
+      const m = masses[s.id] || 0;
+      const mom = lastResult.stationMoments[s.id].toFixed(2);
+      stationRows += `<tr><td>${i+2}</td><td>${t(s.id)}</td><td>${s.arm.toFixed(2)}</td><td style="text-align:right">${m}</td><td style="text-align:right">${mom}</td></tr>`;
+    });
+    stationRows += `<tr style="font-weight:bold;border-top:2px solid #333;color:#e65100"><td>9</td><td>${t('totalNoFuel')}</td><td>—</td><td style="text-align:right">${lastResult.totalNoFuelMass.toFixed(2)}</td><td style="text-align:right">${lastResult.totalNoFuelMoment.toFixed(2)}</td></tr>`;
+    stationRows += `<tr style="background:#f1f8e9"><td>10</td><td>${t('fuel')} (${lastResult.fuelMass.toFixed(2)} kg)</td><td>2.63</td><td style="text-align:right">${lastResult.fuelMass.toFixed(2)}</td><td style="text-align:right">${lastResult.fuelMoment.toFixed(2)}</td></tr>`;
+    stationRows += `<tr style="font-weight:bold;border-top:2px solid #333;color:#2E7D32"><td>11</td><td>${t('totalWithFuel')}</td><td>—</td><td style="text-align:right">${lastResult.totalMass.toFixed(2)}</td><td style="text-align:right">${lastResult.totalMoment.toFixed(2)}</td></tr>`;
 
-      document.body.classList.remove('pdf-capture');
+    const cgStatus = lastResult.cgFullInLimits ? `✓ ${t('withinLimits')}` : `✗ ${t('outOfLimits')}`;
+    const cgColor = lastResult.cgFullInLimits ? '#2E7D32' : '#c62828';
+    const massStatus = lastResult.massInLimits ? `✓ < ${lastResult.maxTakeoffMass} kg` : `✗ ${t('overweight')}`;
+    const massColor = lastResult.massInLimits ? '#2E7D32' : '#c62828';
 
-      const imgData = canvas.toDataURL('image/png');
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF('l', 'mm', 'a4'); // landscape
-      const pdfW = pdf.internal.pageSize.getWidth();
-      const pdfH = pdf.internal.pageSize.getHeight();
-      const imgW = canvas.width;
-      const imgH = canvas.height;
-      const ratio = Math.min(pdfW / imgW, pdfH / imgH);
-      const w = imgW * ratio;
-      const h = imgH * ratio;
-      const x = (pdfW - w) / 2;
-      const y = 0;
+    const reg = selectedAircraft.registration;
+    const dateVal = document.getElementById('flightDate').value;
+    const instructor = document.getElementById('instructorName').value || '—';
+    const student = document.getElementById('studentName').value || '—';
 
-      pdf.addImage(imgData, 'PNG', x, y, w, h);
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>W&B ${reg} ${dateVal}</title>
+<style>
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:20px;color:#000;font-size:12px}
+  h1{font-size:18px;margin:0}
+  .header{display:flex;justify-content:space-between;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:12px}
+  .info{font-size:11px;color:#555}
+  table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:12px}
+  th{text-align:left;padding:4px;border-bottom:1px solid #333;font-size:10px;color:#555}
+  th:nth-child(4),th:nth-child(5){text-align:right}
+  td{padding:4px;border-bottom:1px solid #ddd}
+  td:nth-child(4),td:nth-child(5){text-align:right}
+  .results{display:flex;gap:16px;margin-bottom:12px}
+  .result-box{border:1px solid #333;border-radius:4px;padding:8px 12px;text-align:center;flex:1}
+  .result-box .label{font-size:10px;color:#555}
+  .result-box .value{font-size:18px;font-weight:bold;margin:2px 0}
+  .result-box .status{font-size:10px;font-weight:bold}
+  .diagram{text-align:center;margin-top:8px}
+  .diagram img{max-width:100%;border:1px solid #ccc;border-radius:4px}
+  .footer{text-align:center;font-size:9px;color:#999;border-top:1px solid #ccc;padding-top:6px;margin-top:16px}
+  @media print{body{margin:10px}}
+</style></head><body>
+<div class="header">
+  <div><h1>DA40NG Mass & Balance — ${reg}</h1><div class="info">Urbe Flight School</div></div>
+  <div style="text-align:right"><div><b>${t('date')}:</b> ${dateVal}</div><div><b>${t('instructor')}:</b> ${instructor}</div><div><b>${t('student')}:</b> ${student}</div></div>
+</div>
+<table><thead><tr><th>#</th><th>${t('station')}</th><th>${t('arm')}</th><th>${t('massKg')}</th><th>${t('momentKgm')}</th></tr></thead><tbody>${stationRows}</tbody></table>
+<div class="results">
+  <div class="result-box"><div class="label">${t('cgWithFuel')}</div><div class="value" style="color:${cgColor}">${lastResult.cgFull.toFixed(3)} m</div><div class="status" style="color:${cgColor}">${cgStatus}</div></div>
+  <div class="result-box"><div class="label">${t('takeoffMass')}</div><div class="value" style="color:${massColor}">${lastResult.totalMass.toFixed(1)} kg</div><div class="status" style="color:${massColor}">${massStatus}</div></div>
+  <div class="result-box"><div class="label">${t('margin')}</div><div class="value">${(lastResult.maxTakeoffMass - lastResult.totalMass).toFixed(1)} kg</div><div class="status">${t('available')}</div></div>
+</div>
+<div class="diagram"><img src="${cgImageData}"></div>
+<div class="footer">${t('generatedBy')}</div>
+<script>window.onload=()=>{window.print();}</script>
+</body></html>`;
 
-      // Generate filename with aircraft reg and date
-      const reg = selectedAircraft ? selectedAircraft.registration : 'DA40NG';
-      const date = document.getElementById('flightDate').value.replace(/\//g, '-');
-      pdf.save(`WB_${reg}_${date}.pdf`);
-    } catch (err) {
-      console.error('PDF generation failed:', err);
-      alert('PDF generation failed. Try using Print instead.');
-    }
-
-    btn.textContent = t('downloadPdf');
-    btn.disabled = false;
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
   });
 
   initPdfExport(document.getElementById('cgCanvas'));
