@@ -1,7 +1,7 @@
 import { CG_ENVELOPES } from './fleet-data.js';
 import { t } from './i18n.js';
 
-const MARGIN = { top: 40, right: 30, bottom: 50, left: 70 };
+const MARGIN = { top: 44, right: 30, bottom: 58, left: 80 };
 const CG_MIN = 2.35, CG_MAX = 2.58;
 const MASS_MIN = 900, MASS_MAX = 1350;
 
@@ -66,46 +66,49 @@ export function renderEnvelope(canvas, options) {
 
   // Axis labels
   ctx.fillStyle = '#ccc';
-  ctx.font = '11px sans-serif';
+  ctx.font = '14px sans-serif';
   ctx.textAlign = 'center';
   for (let cg = 2.35; cg <= 2.58; cg += 0.05) {
-    ctx.fillText(cg.toFixed(2), toCx(cg), MARGIN.top + h + 18);
+    ctx.fillText(cg.toFixed(2), toCx(cg), MARGIN.top + h + 22);
   }
-  ctx.fillText('CG (m)', MARGIN.left + w / 2, MARGIN.top + h + 38);
+  ctx.font = 'bold 14px sans-serif';
+  ctx.fillText('CG (m)', MARGIN.left + w / 2, MARGIN.top + h + 46);
 
+  ctx.font = '14px sans-serif';
   ctx.textAlign = 'right';
   for (let m = 900; m <= 1350; m += 50) {
-    ctx.fillText(m.toString(), MARGIN.left - 8, toCy(m) + 4);
+    ctx.fillText(m.toString(), MARGIN.left - 10, toCy(m) + 5);
   }
 
   ctx.save();
-  ctx.translate(14, MARGIN.top + h / 2);
+  ctx.translate(16, MARGIN.top + h / 2);
   ctx.rotate(-Math.PI / 2);
   ctx.textAlign = 'center';
+  ctx.font = 'bold 14px sans-serif';
   ctx.fillText('Mass (kg)', 0, 0);
   ctx.restore();
 
   // Title
   ctx.fillStyle = '#fff';
-  ctx.font = 'bold 12px sans-serif';
+  ctx.font = 'bold 16px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(t('cgDiagram'), MARGIN.left + w / 2, 20);
+  ctx.fillText(t('cgDiagram'), MARGIN.left + w / 2, 24);
 
   // Plot CG points
   function plotPoint(cg, mass, color, label) {
     if (cg == null || mass == null || mass <= 0) return;
     const x = toCx(cg), y = toCy(mass);
     ctx.beginPath();
-    ctx.arc(x, y, 5, 0, Math.PI * 2);
+    ctx.arc(x, y, 6, 0, Math.PI * 2);
     ctx.fillStyle = color;
     ctx.fill();
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = color;
-    ctx.font = '10px sans-serif';
+    ctx.font = 'bold 13px sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(label, x + 8, y + 4);
+    ctx.fillText(label, x + 10, y + 5);
   }
 
   // CG without fuel (reference, always orange)
