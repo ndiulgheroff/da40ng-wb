@@ -60,8 +60,8 @@ export function renderAircraftView(container, stationMasses, fuelLiters, maxFuel
   const svg = `
 <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" class="aircraft-svg">
   <!-- Aircraft silhouette from Piper Cherokee SVG, rotated 90° CW (nose left) -->
-  <g transform="translate(300,100) rotate(-90) scale(0.19) translate(-337,-430)">
-    <image href="img/aircraft.svg" x="0" y="0" width="674" height="859" opacity="0.3"/>
+  <g transform="translate(300,100) rotate(90) scale(0.19) translate(-337,-430)">
+    <image href="img/aircraft.svg" x="0" y="0" width="674" height="859" opacity="0.25"/>
   </g>
 
   <!-- Loading zones -->
