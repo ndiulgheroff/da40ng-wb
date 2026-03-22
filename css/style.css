@@ -151,6 +151,16 @@ body {
   border-radius: 6px;
   padding: 8px;
   margin-bottom: 12px;
+  position: relative;
+}
+.aircraft-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  height: 130%;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  opacity: 0.2;
+  pointer-events: none;
 }
 .aircraft-svg { width: 100%; height: auto; display: block; }
 .aircraft-svg .zone-rect { transition: fill 0.3s, stroke 0.3s; }
@@ -352,7 +362,7 @@ body {
   .result-card.neutral .result-value { color: black !important; }
   .canvas-container { background: transparent !important; border-color: #333 !important; }
   .aircraft-view-container { background: white !important; border-color: #ccc !important; }
-  .aircraft-svg path, .aircraft-svg line { stroke: #333 !important; }
+  .aircraft-bg { opacity: 0.1 !important; filter: invert(1) !important; }
   .aircraft-svg rect.zone-rect { stroke-width: 1 !important; }
   .aircraft-svg text { fill: #333 !important; }
   .warning-banner { border-color: red !important; color: red !important; background: #fff0f0 !important; }

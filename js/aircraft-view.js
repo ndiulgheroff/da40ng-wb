@@ -10,11 +10,11 @@ import { t } from './i18n.js';
 // The SVG is 674x859 originally (nose up), rotated 90° becomes ~859x674 (nose left)
 // Container aspect ratio ~3:1, zones positioned relative to viewBox "0 0 600 200"
 const ZONES = [
-  { id: 'frontSeats', x: 225, y: 68, w: 55, h: 44, label: () => t('frontSeats') },
-  { id: 'rearSeats',  x: 295, y: 72, w: 48, h: 36, label: () => t('rearSeats') },
-  { id: 'stdBaggage', x: 355, y: 76, w: 42, h: 28, label: () => t('stdBaggage') },
-  { id: 'baggageTube', x: 408, y: 80, w: 38, h: 20, label: () => t('baggageTube') },
-  { id: 'fuel',       x: 155, y: 18, w: 90, h: 22, label: () => t('fuel') },
+  { id: 'frontSeats', x: 200, y: 68, w: 60, h: 44, label: () => t('frontSeats') },
+  { id: 'rearSeats',  x: 275, y: 72, w: 50, h: 36, label: () => t('rearSeats') },
+  { id: 'stdBaggage', x: 338, y: 76, w: 44, h: 28, label: () => t('stdBaggage') },
+  { id: 'baggageTube', x: 394, y: 80, w: 40, h: 20, label: () => t('baggageTube') },
+  { id: 'fuel',       x: 140, y: 20, w: 95, h: 22, label: () => t('fuel') },
 ];
 
 function getZoneColor(ratio) {
@@ -59,10 +59,7 @@ export function renderAircraftView(container, stationMasses, fuelLiters, maxFuel
 
   const svg = `
 <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" class="aircraft-svg">
-  <!-- Aircraft silhouette from Piper Cherokee SVG, rotated 90° CW (nose left) -->
-  <g transform="translate(300,100) rotate(90) scale(0.19) translate(-337,-430)">
-    <image href="img/aircraft.svg" x="0" y="0" width="674" height="859" opacity="0.25"/>
-  </g>
+  <!-- Aircraft silhouette as background image, CSS handles rotation -->
 
   <!-- Loading zones -->
   ${zoneData.map(z => {
@@ -88,7 +85,7 @@ export function renderAircraftView(container, stationMasses, fuelLiters, maxFuel
   </text>
 </svg>`;
 
-  container.innerHTML = svg;
+  container.innerHTML = `<img src="img/aircraft.svg" class="aircraft-bg" alt=""/>` + svg;
 
   // Click zones to focus corresponding input
   container.querySelectorAll('.zone-rect').forEach(rect => {
