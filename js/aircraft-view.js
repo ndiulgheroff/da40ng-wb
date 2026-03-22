@@ -79,10 +79,6 @@ export function renderAircraftView(container, stationMasses, fuelLiters, maxFuel
     </text>`;
   }).join('')}
 
-  <!-- Direction reference -->
-  <text x="300" y="195" text-anchor="middle" fill="rgba(255,255,255,0.15)" font-size="7.5" letter-spacing="4">
-    ← FWD                                              AFT →
-  </text>
 </svg>`;
 
   container.innerHTML = `<img src="img/aircraft.svg" class="aircraft-bg" alt=""/>` + svg;
