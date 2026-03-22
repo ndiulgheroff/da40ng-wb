@@ -18,24 +18,27 @@ const ZONES = [
 ];
 
 function getZoneColor(ratio) {
-  if (ratio === 0) return 'rgba(255,255,255,0.04)';
-  if (ratio <= 0.7) return 'rgba(76,175,80,0.25)';
-  if (ratio <= 0.9) return 'rgba(255,193,7,0.3)';
-  if (ratio <= 1.0) return 'rgba(255,152,0,0.35)';
-  return 'rgba(244,67,54,0.4)';
+  if (ratio === 0) return 'rgba(0, 150, 255, 0.15)';
+  if (ratio <= 0.7) return 'rgba(0, 150, 255, 0.3)';
+  if (ratio <= 0.9) return 'rgba(255, 193, 7, 0.35)';
+  if (ratio <= 1.0) return 'rgba(255, 120, 0, 0.4)';
+  return 'rgba(244, 67, 54, 0.45)';
 }
 
 function getZoneBorder(ratio) {
-  if (ratio === 0) return 'rgba(255,255,255,0.12)';
-  if (ratio <= 0.7) return '#4CAF50';
+  if (ratio === 0) return '#2196F3';
+  if (ratio <= 0.7) return '#42A5F5';
   if (ratio <= 0.9) return '#FFC107';
   if (ratio <= 1.0) return '#FF9800';
   return '#f44336';
 }
 
 function getTextColor(ratio) {
-  if (ratio === 0) return 'rgba(255,255,255,0.25)';
-  return getZoneBorder(ratio);
+  if (ratio === 0) return '#64B5F6';
+  if (ratio <= 0.7) return '#90CAF9';
+  if (ratio <= 0.9) return '#FFD54F';
+  if (ratio <= 1.0) return '#FFB74D';
+  return '#EF9A9A';
 }
 
 export function renderAircraftView(container, stationMasses, fuelLiters, maxFuelLiters) {
@@ -67,7 +70,9 @@ export function renderAircraftView(container, stationMasses, fuelLiters, maxFuel
     const maxText = z.id === 'fuel' ? `max ${z.maxMass} L` : `max ${z.maxMass} kg`;
     return `
     <rect x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="4"
-          fill="${getZoneColor(z.ratio)}" stroke="${getZoneBorder(z.ratio)}" stroke-width="1.5"
+          fill="#12121f" stroke="none" pointer-events="none"/>
+    <rect x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="4"
+          fill="${getZoneColor(z.ratio)}" stroke="${getZoneBorder(z.ratio)}" stroke-width="2"
           class="zone-rect" data-zone="${z.id}" style="cursor:pointer"/>
     <text x="${z.x + z.w/2}" y="${z.y + z.h/2}" text-anchor="middle" dominant-baseline="central"
           fill="${getTextColor(z.ratio)}" font-size="9" font-weight="bold" pointer-events="none">
