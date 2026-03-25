@@ -193,7 +193,7 @@ export const AIRCRAFT_TYPES = {
     loadingStations: [
       { id: 'pilotAndPax',   arm: 0.143, maxKg: 200, labelIt: 'Pilota e passeggero',                    labelEn: 'Pilot and passenger' },
       { id: 'baggage',       arm: 0.824, maxKg: 20,  labelIt: 'Bagagliaio',                             labelEn: 'Baggage' },
-      { id: 'baggageExt',    arm: 1.575, maxKg: 20,  labelIt: 'Estensione bagagliaio (solo OE-CCB)',     labelEn: 'Baggage comp. extension (OE-CCB only)' },
+      { id: 'baggageExt',    arm: 1.575, maxKg: 20,  labelIt: 'Estensione bagagliaio',     labelEn: 'Baggage comp. extension', onlyFor: ['OE-CCB'] },
     ],
 
     cgEnvelopes: {

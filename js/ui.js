@@ -24,6 +24,16 @@ function getFuelMaxLiters() {
   return result;
 }
 
+// --- Active loading stations (filtered by selected aircraft's onlyFor) ---
+function getActiveStations() {
+  if (!selectedType) return [];
+  return selectedType.loadingStations.filter(s => {
+    if (!s.onlyFor) return true;
+    if (!selectedAircraft) return false;
+    return s.onlyFor.includes(selectedAircraft.registration);
+  });
+}
+
 // --- Type Selector ---
 function renderTypeSelector() {
   const container = document.getElementById('typeList');
@@ -64,8 +74,14 @@ function renderAircraftList() {
       <div class="detail">${t('lastWeighing')}: ${ac.lastWeighing}</div>
     `;
     card.addEventListener('click', () => {
+      const prevAircraft = selectedAircraft;
       selectedAircraft = ac;
       renderAircraftList();
+      // Re-render stations if onlyFor filtering may have changed
+      if (!prevAircraft || prevAircraft.registration !== ac.registration) {
+        renderCalcTable();
+        renderFuelSection();
+      }
       recalculate();
     });
     container.appendChild(card);
@@ -102,7 +118,7 @@ function renderFuelSection() {
   const maxLiters = getFuelMaxLiters();
 
   selectedType.fuelSystems.forEach((fs, idx) => {
-    const rowNum = selectedType.loadingStations.length + 2 + idx; // +1 for empty mass row, +1 for total-no-fuel row
+    const rowNum = getActiveStations().length + 2 + idx; // +1 for empty mass row, +1 for total-no-fuel row
     const label = lang === 'en' ? fs.labelEn : fs.labelIt;
     const div = document.createElement('div');
     div.className = 'fuel-section';
@@ -159,7 +175,7 @@ function renderCalcTable() {
   tbody.appendChild(row1);
 
   // Loading station rows
-  selectedType.loadingStations.forEach((station, i) => {
+  getActiveStations().forEach((station, i) => {
     const tr = document.createElement('tr');
     const lang = getLang();
     const label = lang === 'en' ? station.labelEn : station.labelIt;
@@ -178,7 +194,7 @@ function renderCalcTable() {
 
   // Total without fuel row
   const rowNoFuel = document.createElement('tr');
-  const noFuelNum = selectedType.loadingStations.length + 2;
+  const noFuelNum = getActiveStations().length + 2;
   rowNoFuel.className = 'subtotal-row no-fuel';
   rowNoFuel.innerHTML = `
     <td>${noFuelNum}</td>
@@ -249,13 +265,13 @@ function recalculate() {
   document.title = `WB_${selectedAircraft.registration}_${dateVal}`;
 
   // Update station moments
-  for (const station of selectedType.loadingStations) {
+  for (const station of getActiveStations()) {
     const cell = document.querySelector(`[data-station-moment="${station.id}"]`);
     if (cell) cell.textContent = result.stationMoments[station.id].toFixed(2);
   }
 
   // Station warnings
-  for (const station of selectedType.loadingStations) {
+  for (const station of getActiveStations()) {
     const input = document.querySelector(`[data-station="${station.id}"]`);
     if (input) {
       input.classList.toggle('warning', result.stationWarnings[station.id] === 1);
@@ -283,7 +299,7 @@ function recalculate() {
   document.getElementById('totalNoFuelMoment').textContent = result.totalNoFuelMoment.toFixed(2);
 
   // Totals section
-  const totalRowNum = selectedType.loadingStations.length + 2 + selectedType.fuelSystems.length;
+  const totalRowNum = getActiveStations().length + 2 + selectedType.fuelSystems.length;
   const totalsSection = document.getElementById('totalsSection');
   totalsSection.innerHTML = `
     <table class="calc-table">
@@ -319,7 +335,8 @@ function recalculate() {
   // Aircraft top-down view
   renderAircraftView(
     document.getElementById('aircraftView'),
-    selectedType, stationMasses, fuelLiters, fuelMaxLiters
+    selectedType, stationMasses, fuelLiters, fuelMaxLiters,
+    selectedAircraft ? selectedAircraft.registration : null
   );
 
   setPrintOptions({ ...chartOpts, chartScales: selectedType.chartScales });
@@ -334,7 +351,7 @@ function renderResults(result) {
   if (!result.massInLimits) warnings.push(`${t('overweight')}: ${result.totalMass.toFixed(1)} kg > ${result.maxTakeoffMass} kg`);
   if (!result.cgFullInLimits && !result.noPilotWarning) warnings.push(t('outOfLimits'));
   if (result.fuelOverLimit) warnings.push(t('fuelOverLimit'));
-  for (const station of selectedType.loadingStations) {
+  for (const station of getActiveStations()) {
     if (result.stationWarnings[station.id]) {
       const lang = getLang();
       const label = lang === 'en' ? station.labelEn : station.labelIt;
@@ -421,7 +438,7 @@ function renderUI() {
     document.getElementById('warningBanner').classList.remove('visible');
     document.getElementById('totalsSection').innerHTML = '';
     // Clear aircraft view
-    renderAircraftView(document.getElementById('aircraftView'), selectedType, {}, {}, {});
+    renderAircraftView(document.getElementById('aircraftView'), selectedType, {}, {}, {}, null);
   }
 }
 

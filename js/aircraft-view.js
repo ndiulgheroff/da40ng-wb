@@ -73,8 +73,9 @@ function getTextColor(ratio) {
  * @param {object} stationMasses — { stationId: kg }
  * @param {object} fuelLiters — { fuelSystemId: liters }
  * @param {object} fuelMaxLiters — { fuelSystemId: maxLiters }
+ * @param {string|null} registration — selected aircraft registration (for onlyFor filtering)
  */
-export function renderAircraftView(container, typeConfig, stationMasses, fuelLiters, fuelMaxLiters) {
+export function renderAircraftView(container, typeConfig, stationMasses, fuelLiters, fuelMaxLiters, registration) {
   if (!typeConfig) {
     container.innerHTML = '';
     return;
@@ -86,7 +87,14 @@ export function renderAircraftView(container, typeConfig, stationMasses, fuelLit
   const fuelMap = {};
   for (const fs of typeConfig.fuelSystems) fuelMap[fs.id] = fs;
 
-  const zones = ZONE_LAYOUTS[typeConfig.id] || [];
+  // Filter zones: hide station zones that have onlyFor and don't match the selected aircraft
+  const allZones = ZONE_LAYOUTS[typeConfig.id] || [];
+  const zones = allZones.filter(z => {
+    if (z.id.startsWith('fuel:')) return true;
+    const station = stationMap[z.id];
+    if (!station || !station.onlyFor) return true;
+    return registration && station.onlyFor.includes(registration);
+  });
 
   const zoneData = zones.map(z => {
     let mass, maxMass, ratio, unit, displayId;
