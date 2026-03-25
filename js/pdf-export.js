@@ -16,16 +16,16 @@ export function initPdfExport(cgCanvas, momentCanvas) {
     if (currentOptions) {
       const origDpr = window.devicePixelRatio;
       Object.defineProperty(window, 'devicePixelRatio', { value: 2, writable: true, configurable: true });
-      renderEnvelope(cgCanvas, currentOptions, true);
-      renderMomentRange(momentCanvas, currentOptions, true);
+      renderEnvelope(cgCanvas, currentOptions, currentOptions.chartScales, true);
+      renderMomentRange(momentCanvas, currentOptions, currentOptions.chartScales, true);
       Object.defineProperty(window, 'devicePixelRatio', { value: origDpr, writable: true, configurable: true });
     }
   });
 
   window.addEventListener('afterprint', () => {
     if (currentOptions) {
-      renderEnvelope(cgCanvas, currentOptions);
-      renderMomentRange(momentCanvas, currentOptions);
+      renderEnvelope(cgCanvas, currentOptions, currentOptions.chartScales);
+      renderMomentRange(momentCanvas, currentOptions, currentOptions.chartScales);
     }
   });
 }

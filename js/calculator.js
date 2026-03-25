@@ -1,7 +1,10 @@
-import { LOADING_STATIONS, FUEL_DENSITY, FUEL_ARM, MAX_FUEL_LITERS, CG_ENVELOPES } from './fleet-data.js';
+/**
+ * Weight & Balance calculator — type-agnostic.
+ * All type-specific data (stations, fuel, envelopes) is passed in via parameters.
+ */
 
-function isInEnvelope(mass, cg, maxTakeoffMass) {
-  const envelope = CG_ENVELOPES[maxTakeoffMass];
+function isInEnvelope(mass, cg, cgEnvelopes, maxTakeoffMass) {
+  const envelope = cgEnvelopes[maxTakeoffMass];
   if (!envelope) return false;
 
   const minMass = envelope[0].mass;
@@ -25,16 +28,24 @@ function isInEnvelope(mass, cg, maxTakeoffMass) {
   return cg >= cgFwd && cg <= cgAft;
 }
 
-export function calculate({ aircraft, stationMasses, fuelLiters, maxFuelLiters }) {
-  const maxFuel = maxFuelLiters || MAX_FUEL_LITERS;
+/**
+ * @param {object} opts
+ * @param {object} opts.aircraft       — selected fleet entry
+ * @param {object} opts.typeConfig     — full type config from AIRCRAFT_TYPES
+ * @param {object} opts.stationMasses  — { stationId: kg }
+ * @param {object} opts.fuelLiters     — { fuelSystemId: liters }
+ * @param {object} opts.fuelMaxLiters  — { fuelSystemId: maxLiters } (after tank config overrides)
+ */
+export function calculate({ aircraft, typeConfig, stationMasses, fuelLiters, fuelMaxLiters }) {
   const emptyMass = aircraft.emptyWeight;
   const emptyMoment = aircraft.emptyMoment;
 
+  // Stations
   const stationMoments = {};
   let stationsMassSum = 0;
   let stationsMomentSum = 0;
 
-  for (const station of LOADING_STATIONS) {
+  for (const station of typeConfig.loadingStations) {
     const mass = stationMasses[station.id] || 0;
     const moment = mass * station.arm;
     stationMoments[station.id] = moment;
@@ -43,34 +54,55 @@ export function calculate({ aircraft, stationMasses, fuelLiters, maxFuelLiters }
   }
 
   const stationWarnings = {};
-  for (const station of LOADING_STATIONS) {
+  for (const station of typeConfig.loadingStations) {
     const mass = stationMasses[station.id] || 0;
     stationWarnings[station.id] = mass > station.maxKg ? 1 : 0;
   }
 
-  const noPilotWarning = (stationMasses.frontSeats || 0) === 0 ? 1 : 0;
-  const fuelOverLimit = fuelLiters > maxFuel ? 1 : 0;
+  // Pilot warning — check first "seats" station
+  const firstStation = typeConfig.loadingStations[0];
+  const noPilotWarning = (stationMasses[firstStation.id] || 0) === 0 ? 1 : 0;
 
+  // Total without fuel
   const totalNoFuelMass = emptyMass + stationsMassSum;
   const totalNoFuelMoment = emptyMoment + stationsMomentSum;
 
-  const fuelMass = fuelLiters * FUEL_DENSITY;
-  const fuelMoment = fuelMass * FUEL_ARM;
+  // Fuel — sum all fuel systems
+  let totalFuelMass = 0;
+  let totalFuelMoment = 0;
+  const fuelDetails = {};
+  const fuelOverLimits = {};
+  let anyFuelOverLimit = false;
 
-  const totalMass = totalNoFuelMass + fuelMass;
-  const totalMoment = totalNoFuelMoment + fuelMoment;
+  for (const fs of typeConfig.fuelSystems) {
+    const liters = fuelLiters[fs.id] || 0;
+    const maxL = fuelMaxLiters[fs.id] || fs.maxLiters;
+    const mass = liters * fs.density;
+    const moment = mass * fs.arm;
+    fuelDetails[fs.id] = { liters, mass, moment, maxLiters: maxL };
+    totalFuelMass += mass;
+    totalFuelMoment += moment;
+    const over = liters > maxL ? 1 : 0;
+    fuelOverLimits[fs.id] = over;
+    if (over) anyFuelOverLimit = true;
+  }
+
+  // Totals
+  const totalMass = totalNoFuelMass + totalFuelMass;
+  const totalMoment = totalNoFuelMoment + totalFuelMoment;
 
   const cgNoFuel = totalNoFuelMass > 0 ? totalNoFuelMoment / totalNoFuelMass : 0;
   const cgFull = totalMass > 0 ? totalMoment / totalMass : 0;
 
-  const cgFullInLimits = isInEnvelope(totalMass, cgFull, aircraft.maxTakeoffMass) ? 1 : 0;
+  const cgFullInLimits = isInEnvelope(totalMass, cgFull, typeConfig.cgEnvelopes, aircraft.maxTakeoffMass) ? 1 : 0;
   const massInLimits = totalMass <= aircraft.maxTakeoffMass ? 1 : 0;
 
   return {
     emptyMass, emptyMoment, stationMoments, stationWarnings,
-    noPilotWarning, fuelOverLimit,
+    noPilotWarning, fuelOverLimits, fuelOverLimit: anyFuelOverLimit ? 1 : 0,
     totalNoFuelMass, totalNoFuelMoment,
-    fuelMass, fuelMoment, totalMass, totalMoment,
+    fuelDetails, totalFuelMass, totalFuelMoment,
+    totalMass, totalMoment,
     cgNoFuel, cgFull, cgFullInLimits, massInLimits,
     maxTakeoffMass: aircraft.maxTakeoffMass,
   };

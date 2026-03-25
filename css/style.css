@@ -1,4 +1,4 @@
-/* DA40NG W&B Dashboard Styles */
+/* Urbe W&B Dashboard Styles — Multi-type */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -117,6 +117,33 @@ body {
 .aircraft-card .reg { font-weight: bold; font-size: 14px; }
 .aircraft-card.selected .reg { color: var(--green); }
 .aircraft-card .detail { font-size: 11px; color: var(--text-secondary); }
+
+/* Type selector */
+.type-list {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.type-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+  transition: border-color 0.2s, background 0.2s;
+  flex: 1;
+  text-align: center;
+}
+.type-btn:hover { border-color: var(--text-secondary); }
+.type-btn.active {
+  background: rgba(33,150,243,0.15);
+  border-color: var(--blue);
+  color: var(--blue);
+}
 
 .flight-info { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 12px; }
 
@@ -323,6 +350,8 @@ body {
   .topbar-title, .topbar-subtitle { color: black !important; opacity: 1 !important; }
   .topbar-actions .lang-btn { display: none; }
   .topbar-actions .btn-reset { display: none; }
+  .panel-left .type-btn:not(.active) { display: none; }
+  .panel-left .type-btn.active { background: white !important; color: black !important; border-color: black !important; }
   .panel-left .aircraft-card:not(.selected) { display: none; }
   .aircraft-card { border-color: black !important; background: white !important; }
   .aircraft-card .reg { color: black !important; }

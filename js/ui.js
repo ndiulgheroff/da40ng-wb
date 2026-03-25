@@ -1,23 +1,61 @@
-import { FLEET, LOADING_STATIONS, FUEL_DENSITY, FUEL_ARM, MAX_FUEL_LITERS, TANK_CONFIGS } from './fleet-data.js';
+import { AIRCRAFT_TYPES, TYPE_IDS } from './fleet-data.js';
 import { calculate } from './calculator.js';
 import { renderEnvelope, renderMomentRange } from './cg-envelope.js';
 import { renderAircraftView } from './aircraft-view.js';
 import { t, getLang, setLang } from './i18n.js';
 import { setPrintOptions, initPdfExport } from './pdf-export.js';
 
+let selectedType = null;      // e.g. AIRCRAFT_TYPES.DA40NG
 let selectedAircraft = null;
 let lastResult = null;
-let selectedTankConfig = TANK_CONFIGS.longRange;
+let selectedTankConfig = null; // only for types with tankConfigs
 
-function getMaxFuel() {
-  return selectedTankConfig.maxFuelLiters;
+// --- Get effective max fuel liters per fuel system ---
+function getFuelMaxLiters() {
+  const result = {};
+  if (!selectedType) return result;
+  for (const fs of selectedType.fuelSystems) {
+    let max = fs.maxLiters;
+    if (selectedTankConfig && selectedTankConfig.fuelOverrides && selectedTankConfig.fuelOverrides[fs.id] != null) {
+      max = selectedTankConfig.fuelOverrides[fs.id];
+    }
+    result[fs.id] = max;
+  }
+  return result;
+}
+
+// --- Type Selector ---
+function renderTypeSelector() {
+  const container = document.getElementById('typeList');
+  container.innerHTML = '';
+  for (const typeId of TYPE_IDS) {
+    const typeConf = AIRCRAFT_TYPES[typeId];
+    const btn = document.createElement('button');
+    btn.className = 'type-btn' + (selectedType === typeConf ? ' active' : '');
+    btn.textContent = typeConf.label;
+    btn.addEventListener('click', () => {
+      if (selectedType === typeConf) return;
+      selectedType = typeConf;
+      selectedAircraft = null;
+      lastResult = null;
+      // Init tank config
+      if (typeConf.tankConfigs && typeConf.defaultTankConfig) {
+        selectedTankConfig = typeConf.tankConfigs[typeConf.defaultTankConfig];
+      } else {
+        selectedTankConfig = null;
+      }
+      renderUI();
+    });
+    container.appendChild(btn);
+  }
 }
 
 // --- Aircraft List ---
 function renderAircraftList() {
   const container = document.getElementById('aircraftList');
   container.innerHTML = '';
-  for (const ac of FLEET) {
+  if (!selectedType) return;
+  for (const ac of selectedType.fleet) {
     const card = document.createElement('div');
     card.className = 'aircraft-card' + (selectedAircraft === ac ? ' selected' : '');
     card.innerHTML = `
@@ -34,16 +72,81 @@ function renderAircraftList() {
   }
 }
 
+// --- Tank Config Selector ---
+function renderTankConfig() {
+  const wrapper = document.getElementById('tankConfigWrapper');
+  if (!selectedType || !selectedType.tankConfigs) {
+    wrapper.style.display = 'none';
+    return;
+  }
+  wrapper.style.display = '';
+  const select = document.getElementById('tankConfigSelect');
+  select.innerHTML = '';
+  const lang = getLang();
+  for (const [key, cfg] of Object.entries(selectedType.tankConfigs)) {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = lang === 'en' ? cfg.labelEn : cfg.labelIt;
+    if (selectedTankConfig && selectedTankConfig.id === key) opt.selected = true;
+    select.appendChild(opt);
+  }
+}
+
+// --- Fuel Section ---
+function renderFuelSection() {
+  const container = document.getElementById('fuelSection');
+  container.innerHTML = '';
+  if (!selectedType) return;
+
+  const lang = getLang();
+  const maxLiters = getFuelMaxLiters();
+
+  selectedType.fuelSystems.forEach((fs, idx) => {
+    const rowNum = selectedType.loadingStations.length + 2 + idx; // +1 for empty mass row, +1 for total-no-fuel row
+    const label = lang === 'en' ? fs.labelEn : fs.labelIt;
+    const div = document.createElement('div');
+    div.className = 'fuel-section';
+    div.innerHTML = `
+      <div class="fuel-header">
+        <span><b>${rowNum}.</b> ${label} (${fs.density} kg/L) — Max: <span class="fuel-max-display" data-fuel="${fs.id}">${maxLiters[fs.id]}</span> L</span>
+        <span class="fuel-arm-label">${t('armLabel')}: ${fs.arm} m</span>
+      </div>
+      <div class="fuel-input-row">
+        <div>
+          <div class="fuel-label">${t('fuelLiters')}</div>
+          <input class="mass-input fuel-input" type="number" data-fuel="${fs.id}" min="0" max="${maxLiters[fs.id]}" step="1" value="0" inputmode="decimal">
+        </div>
+        <div class="fuel-arrow">&rarr;</div>
+        <div>
+          <div class="fuel-label">${t('massKg')}</div>
+          <span class="fuel-mass-display" data-fuel="${fs.id}">0.00</span>
+        </div>
+        <div class="fuel-arrow">&rarr;</div>
+        <div>
+          <div class="fuel-label">${t('momentKgm')}</div>
+          <span class="fuel-moment-display" data-fuel="${fs.id}">0.00</span>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+
+  // Bind fuel input events
+  container.querySelectorAll('.fuel-input').forEach(input => {
+    input.addEventListener('input', () => recalculate());
+    input.addEventListener('change', () => { sanitizeInput(input); recalculate(); });
+  });
+}
+
 // --- Calculation Table ---
 function renderCalcTable() {
-  // Save current input values before rebuilding
   const savedMasses = getStationMasses();
-  const savedFuel = parseFloat(document.getElementById('fuelInput')?.value) || 0;
-
   const tbody = document.getElementById('calcBody');
   tbody.innerHTML = '';
 
-  // Row 1: Empty mass (auto-filled)
+  if (!selectedType) return;
+
+  // Row 1: Empty mass
   const row1 = document.createElement('tr');
   row1.className = 'auto-filled';
   row1.innerHTML = `
@@ -55,13 +158,15 @@ function renderCalcTable() {
   `;
   tbody.appendChild(row1);
 
-  // Rows 2-8: Loading stations
-  LOADING_STATIONS.forEach((station, i) => {
+  // Loading station rows
+  selectedType.loadingStations.forEach((station, i) => {
     const tr = document.createElement('tr');
+    const lang = getLang();
+    const label = lang === 'en' ? station.labelEn : station.labelIt;
     tr.innerHTML = `
       <td>${i + 2}</td>
-      <td data-i18n="${station.id}">${t(station.id)}</td>
-      <td>${station.arm.toFixed(2)}</td>
+      <td>${label}</td>
+      <td>${station.arm.toFixed(station.arm < 1 ? 3 : 2)}</td>
       <td style="text-align:right">
         <input class="mass-input station-input" type="number" min="0" max="${station.maxKg}"
                step="0.1" value="0" data-station="${station.id}" data-max="${station.maxKg}" inputmode="decimal">
@@ -71,41 +176,35 @@ function renderCalcTable() {
     tbody.appendChild(tr);
   });
 
-  // Row 9: Total without fuel
-  const row9 = document.createElement('tr');
-  row9.className = 'subtotal-row no-fuel';
-  row9.innerHTML = `
-    <td>9</td>
-    <td data-i18n="totalNoFuel">${t('totalNoFuel')}</td>
+  // Total without fuel row
+  const rowNoFuel = document.createElement('tr');
+  const noFuelNum = selectedType.loadingStations.length + 2;
+  rowNoFuel.className = 'subtotal-row no-fuel';
+  rowNoFuel.innerHTML = `
+    <td>${noFuelNum}</td>
+    <td>${t('totalNoFuel')}</td>
     <td>—</td>
     <td style="text-align:right" id="totalNoFuelMass">0.00</td>
     <td style="text-align:right" id="totalNoFuelMoment">0.00</td>
   `;
-  tbody.appendChild(row9);
+  tbody.appendChild(rowNoFuel);
 
-  // Restore saved values
+  // Restore saved station values
   tbody.querySelectorAll('.station-input').forEach(input => {
     const saved = savedMasses[input.dataset.station];
     if (saved) input.value = saved;
     input.addEventListener('input', () => recalculate());
     input.addEventListener('change', () => { sanitizeInput(input); recalculate(); });
   });
-
-  // Restore fuel
-  const fuelInput = document.getElementById('fuelInput');
-  if (savedFuel) fuelInput.value = savedFuel;
 }
 
 // --- Input Sanitization ---
-// Called on 'change'/'blur' only, NOT on every keystroke,
-// so the user can type decimal values like "12.5" without interference.
 function sanitizeInput(input) {
   let val = parseFloat(input.value);
   if (isNaN(val) || val < 0) {
     input.value = 0;
     return;
   }
-  // Round to 1 decimal
   val = Math.round(val * 10) / 10;
   input.value = val;
 }
@@ -119,14 +218,30 @@ function getStationMasses() {
   return masses;
 }
 
+// --- Gather Fuel Liters ---
+function getFuelInputLiters() {
+  const liters = {};
+  document.querySelectorAll('.fuel-input').forEach(input => {
+    liters[input.dataset.fuel] = parseFloat(input.value) || 0;
+  });
+  return liters;
+}
+
 // --- Recalculate ---
 function recalculate() {
-  if (!selectedAircraft) return;
+  if (!selectedAircraft || !selectedType) return;
 
   const stationMasses = getStationMasses();
-  const fuelLiters = parseFloat(document.getElementById('fuelInput').value) || 0;
+  const fuelLiters = getFuelInputLiters();
+  const fuelMaxLiters = getFuelMaxLiters();
 
-  const result = calculate({ aircraft: selectedAircraft, stationMasses, fuelLiters, maxFuelLiters: getMaxFuel() });
+  const result = calculate({
+    aircraft: selectedAircraft,
+    typeConfig: selectedType,
+    stationMasses,
+    fuelLiters,
+    fuelMaxLiters,
+  });
   lastResult = result;
 
   // Update page title for PDF filename
@@ -134,39 +249,47 @@ function recalculate() {
   document.title = `WB_${selectedAircraft.registration}_${dateVal}`;
 
   // Update station moments
-  for (const station of LOADING_STATIONS) {
+  for (const station of selectedType.loadingStations) {
     const cell = document.querySelector(`[data-station-moment="${station.id}"]`);
     if (cell) cell.textContent = result.stationMoments[station.id].toFixed(2);
   }
 
   // Station warnings
-  for (const station of LOADING_STATIONS) {
+  for (const station of selectedType.loadingStations) {
     const input = document.querySelector(`[data-station="${station.id}"]`);
     if (input) {
       input.classList.toggle('warning', result.stationWarnings[station.id] === 1);
     }
   }
 
-  // Fuel display
-  document.getElementById('fuelMassDisplay').textContent = result.fuelMass.toFixed(2);
-  document.getElementById('fuelMomentDisplay').textContent = result.fuelMoment.toFixed(2);
-  document.getElementById('maxFuelDisplay').textContent = getMaxFuel();
-
-  // Fuel input warning
-  const fuelInput = document.getElementById('fuelInput');
-  fuelInput.classList.toggle('warning', result.fuelOverLimit === 1);
+  // Fuel displays
+  for (const fs of selectedType.fuelSystems) {
+    const detail = result.fuelDetails[fs.id];
+    const massEl = document.querySelector(`.fuel-mass-display[data-fuel="${fs.id}"]`);
+    const momEl = document.querySelector(`.fuel-moment-display[data-fuel="${fs.id}"]`);
+    const maxEl = document.querySelector(`.fuel-max-display[data-fuel="${fs.id}"]`);
+    const input = document.querySelector(`.fuel-input[data-fuel="${fs.id}"]`);
+    if (massEl) massEl.textContent = detail.mass.toFixed(2);
+    if (momEl) momEl.textContent = detail.moment.toFixed(2);
+    if (maxEl) maxEl.textContent = detail.maxLiters;
+    if (input) {
+      input.max = detail.maxLiters;
+      input.classList.toggle('warning', result.fuelOverLimits[fs.id] === 1);
+    }
+  }
 
   // Totals
   document.getElementById('totalNoFuelMass').textContent = result.totalNoFuelMass.toFixed(2);
   document.getElementById('totalNoFuelMoment').textContent = result.totalNoFuelMoment.toFixed(2);
 
-  // Totals section (row 11)
+  // Totals section
+  const totalRowNum = selectedType.loadingStations.length + 2 + selectedType.fuelSystems.length;
   const totalsSection = document.getElementById('totalsSection');
   totalsSection.innerHTML = `
     <table class="calc-table">
       <tr class="subtotal-row with-fuel">
-        <td>11</td>
-        <td data-i18n="totalWithFuel">${t('totalWithFuel')}</td>
+        <td>${totalRowNum}</td>
+        <td>${t('totalWithFuel')}</td>
         <td>—</td>
         <td style="text-align:right">${result.totalMass.toFixed(2)}</td>
         <td style="text-align:right">${result.totalMoment.toFixed(2)}</td>
@@ -177,9 +300,11 @@ function recalculate() {
   // Results panel
   renderResults(result);
 
-  // CG Diagram (6.4.4)
+  // CG Diagram
   const chartOpts = {
     maxTakeoffMass: selectedAircraft.maxTakeoffMass,
+    cgEnvelopes: selectedType.cgEnvelopes,
+    maxZeroFuelMass: selectedType.maxZeroFuelMass,
     cgNoFuel: result.cgNoFuel,
     massNoFuel: result.totalNoFuelMass,
     cgFull: result.cgFull,
@@ -188,20 +313,16 @@ function recalculate() {
     momentFull: result.totalMoment,
     cgFullInLimits: result.cgFullInLimits === 1,
   };
-  renderEnvelope(document.getElementById('cgCanvas'), chartOpts);
-
-  // Moment Range Diagram (6.4.5)
-  renderMomentRange(document.getElementById('momentCanvas'), chartOpts);
+  renderEnvelope(document.getElementById('cgCanvas'), chartOpts, selectedType.chartScales);
+  renderMomentRange(document.getElementById('momentCanvas'), chartOpts, selectedType.chartScales);
 
   // Aircraft top-down view
   renderAircraftView(
     document.getElementById('aircraftView'),
-    stationMasses, fuelLiters, getMaxFuel()
+    selectedType, stationMasses, fuelLiters, fuelMaxLiters
   );
 
-  setPrintOptions({
-    ...chartOpts,
-  });
+  setPrintOptions({ ...chartOpts, chartScales: selectedType.chartScales });
 }
 
 // --- Results Panel ---
@@ -209,22 +330,18 @@ function renderResults(result) {
   const grid = document.getElementById('resultGrid');
   const warnings = [];
 
-  // No pilot warning
   if (result.noPilotWarning) warnings.push(t('enterPilotWeight'));
-  // Overweight
   if (!result.massInLimits) warnings.push(`${t('overweight')}: ${result.totalMass.toFixed(1)} kg > ${result.maxTakeoffMass} kg`);
-  // CG out of limits
   if (!result.cgFullInLimits && !result.noPilotWarning) warnings.push(t('outOfLimits'));
-  // Fuel over
   if (result.fuelOverLimit) warnings.push(t('fuelOverLimit'));
-  // Station warnings
-  for (const station of LOADING_STATIONS) {
+  for (const station of selectedType.loadingStations) {
     if (result.stationWarnings[station.id]) {
-      warnings.push(`${t(station.id)}: ${t('overStationLimit')}`);
+      const lang = getLang();
+      const label = lang === 'en' ? station.labelEn : station.labelIt;
+      warnings.push(`${label}: ${t('overStationLimit')}`);
     }
   }
 
-  // Warning banner
   const banner = document.getElementById('warningBanner');
   if (warnings.length > 0) {
     banner.innerHTML = warnings.join('<br>');
@@ -233,7 +350,6 @@ function renderResults(result) {
     banner.classList.remove('visible');
   }
 
-  // CG cards
   const cgNoFuelClass = 'ref';
   const cgFullClass = result.noPilotWarning ? 'neutral' :
                        (result.cgFullInLimits ? 'ok' : 'fail');
@@ -272,35 +388,46 @@ function applyTranslations() {
   });
 }
 
-// --- Re-render (called on language switch) ---
+// --- Re-render (called on type/language switch) ---
 function renderUI() {
+  renderTypeSelector();
   renderAircraftList();
+  renderTankConfig();
   renderCalcTable();
+  renderFuelSection();
   applyTranslations();
+
+  // Update app title to include type
+  const titleEl = document.querySelector('.topbar-title');
+  if (titleEl) {
+    titleEl.textContent = selectedType
+      ? `${selectedType.label} Mass & Balance`
+      : t('appTitle');
+  }
 
   // Update language button active states
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.lang === getLang());
   });
 
-  if (selectedAircraft) {
+  if (selectedAircraft && selectedType) {
     recalculate();
   } else {
     document.getElementById('resultGrid').innerHTML = `
       <div class="result-card neutral" style="grid-column: 1 / -1; padding: 20px;">
-        <div class="result-label">${t('selectAircraft')}</div>
+        <div class="result-label">${selectedType ? t('selectAircraft') : t('selectType')}</div>
       </div>
     `;
-    // Empty aircraft view
-    const emptyMasses = {};
-    LOADING_STATIONS.forEach(s => emptyMasses[s.id] = 0);
-    renderAircraftView(document.getElementById('aircraftView'), emptyMasses, 0, getMaxFuel());
+    document.getElementById('warningBanner').classList.remove('visible');
+    document.getElementById('totalsSection').innerHTML = '';
+    // Clear aircraft view
+    renderAircraftView(document.getElementById('aircraftView'), selectedType, {}, {}, {});
   }
 }
 
-// --- Init (runs once) ---
+// --- Init ---
 function initUI() {
-  // Set today's date in dd/mm/yyyy format
+  // Set today's date
   const dateInput = document.getElementById('flightDate');
   if (!dateInput.value) {
     const now = new Date();
@@ -310,16 +437,20 @@ function initUI() {
     dateInput.value = `${dd}/${mm}/${yyyy}`;
   }
 
-  // Bind events ONCE
-  const fuelInput = document.getElementById('fuelInput');
-  fuelInput.max = getMaxFuel();
-  fuelInput.addEventListener('input', () => recalculate());
-  fuelInput.addEventListener('change', () => { sanitizeInput(fuelInput); recalculate(); });
-
   // Tank config selector
   document.getElementById('tankConfigSelect').addEventListener('change', (e) => {
-    selectedTankConfig = TANK_CONFIGS[e.target.value];
-    fuelInput.max = getMaxFuel();
+    if (!selectedType || !selectedType.tankConfigs) return;
+    selectedTankConfig = selectedType.tankConfigs[e.target.value];
+    // Update fuel max displays and re-render fuel section
+    const maxLiters = getFuelMaxLiters();
+    document.querySelectorAll('.fuel-input').forEach(input => {
+      const fsId = input.dataset.fuel;
+      if (maxLiters[fsId] != null) input.max = maxLiters[fsId];
+    });
+    document.querySelectorAll('.fuel-max-display').forEach(el => {
+      const fsId = el.dataset.fuel;
+      if (maxLiters[fsId] != null) el.textContent = maxLiters[fsId];
+    });
     recalculate();
   });
 
@@ -331,11 +462,10 @@ function initUI() {
     document.getElementById('studentName').value = '';
     const now = new Date();
     document.getElementById('flightDate').value = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
-    document.getElementById('fuelInput').value = 0;
-    document.getElementById('tankConfigSelect').value = 'longRange';
-    selectedTankConfig = TANK_CONFIGS.longRange;
-    document.getElementById('fuelInput').max = getMaxFuel();
-    document.title = 'DA40NG Mass & Balance — Urbe Flight School';
+    if (selectedType && selectedType.tankConfigs && selectedType.defaultTankConfig) {
+      selectedTankConfig = selectedType.tankConfigs[selectedType.defaultTankConfig];
+    }
+    document.title = 'Mass & Balance — Urbe Flight School';
     renderUI();
   });
 
