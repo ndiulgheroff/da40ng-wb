@@ -84,9 +84,9 @@ export const AIRCRAFT_TYPES = {
     label: 'DA42NG',
 
     fuelSystems: [
-      { id: 'mainFuel', density: 0.84, arm: 2.63, maxLiters: 196,
+      { id: 'mainFuel', density: 0.84, arm: 2.63, maxLiters: 189,
         labelIt: 'Carburante principale (Jet-A1)', labelEn: 'Main fuel (Jet-A1)' },
-      { id: 'auxFuel', density: 0.84, arm: 3.20, maxLiters: 98,
+      { id: 'auxFuel', density: 0.84, arm: 3.20, maxLiters: 100,
         labelIt: 'Carburante ausiliario (Jet-A1)', labelEn: 'Auxiliary fuel (Jet-A1)', optional: true },
     ],
 
@@ -101,10 +101,10 @@ export const AIRCRAFT_TYPES = {
       { id: 'noseBaggage',    arm: 0.90,  maxKg: 30,   labelIt: 'Bagagliaio anteriore (muso)',                 labelEn: 'Nose baggage comp.' },
       { id: 'cabinBaggage',   arm: 3.89,  maxKg: 45,   labelIt: 'Bagagliaio cabina',                          labelEn: 'Cabin baggage comp.' },
       { id: 'baggageExt',     arm: 4.54,  maxKg: 18,   labelIt: 'Estensione bagagli',                         labelEn: 'Baggage extension' },
-      { id: 'stdBaggage',     arm: 3.65,  maxKg: 45,   labelIt: 'Bagagliaio standard',                        labelEn: 'Standard baggage comp.' },
-      { id: 'shortBagExt',    arm: 3.97,  maxKg: 18,   labelIt: 'Estensione bagagli corta (OAM 42-301)',       labelEn: 'Short baggage ext. (OAM 42-301)' },
+      { id: 'stdBaggage',     arm: 3.65,  maxKg: 30,   labelIt: 'Bagagliaio standard',                        labelEn: 'Standard baggage comp.' },
+      { id: 'shortBagExt',    arm: 3.97,  maxKg: 15,   labelIt: 'Estensione bagagli corta (OAM 42-301)',       labelEn: 'Short baggage ext. (OAM 42-301)' },
       { id: 'deIcingFluid',   arm: 1.00,  maxKg: 27.5, labelIt: 'Liquido anti-ghiaccio (OAM 42-160)',         labelEn: 'De-icing fluid (OAM 42-160)' },
-      { id: 'deIcingFluid2',  arm: 1.52,  maxKg: 30,   labelIt: 'Liquido anti-ghiaccio (OAM 42-160 + 42-309)',labelEn: 'De-icing fluid (OAM 42-160 + 42-309)' },
+      { id: 'deIcingFluid2',  arm: 1.52,  maxKg: 27.5, labelIt: 'Liquido anti-ghiaccio (OAM 42-160 + 42-309)',labelEn: 'De-icing fluid (OAM 42-160 + 42-309)' },
     ],
 
     // CG envelope from EASA TCDS A.005 Issue 44, Section C.III.14
@@ -144,9 +144,9 @@ export const AIRCRAFT_TYPES = {
     label: 'I-AL42',
 
     fuelSystems: [
-      { id: 'mainFuel', density: 0.84, arm: 2.63, maxLiters: 196,
+      { id: 'mainFuel', density: 0.84, arm: 2.63, maxLiters: 189,
         labelIt: 'Carburante principale (Jet-A1)', labelEn: 'Main fuel (Jet-A1)' },
-      { id: 'auxFuel', density: 0.84, arm: 3.20, maxLiters: 98,
+      { id: 'auxFuel', density: 0.84, arm: 3.20, maxLiters: 100,
         labelIt: 'Carburante ausiliario (Jet-A1)', labelEn: 'Auxiliary fuel (Jet-A1)', optional: true },
     ],
 
@@ -161,10 +161,10 @@ export const AIRCRAFT_TYPES = {
       { id: 'noseBaggage',    arm: 0.90,  maxKg: 30,   labelIt: 'Bagagliaio anteriore (muso)',                 labelEn: 'Nose baggage comp.' },
       { id: 'cabinBaggage',   arm: 3.89,  maxKg: 45,   labelIt: 'Bagagliaio cabina',                          labelEn: 'Cabin baggage comp.' },
       { id: 'baggageExt',     arm: 4.54,  maxKg: 18,   labelIt: 'Estensione bagagli',                         labelEn: 'Baggage extension' },
-      { id: 'stdBaggage',     arm: 3.65,  maxKg: 45,   labelIt: 'Bagagliaio standard',                        labelEn: 'Standard baggage comp.' },
-      { id: 'shortBagExt',    arm: 3.97,  maxKg: 18,   labelIt: 'Estensione bagagli corta (OAM 42-301)',       labelEn: 'Short baggage ext. (OAM 42-301)' },
+      { id: 'stdBaggage',     arm: 3.65,  maxKg: 30,   labelIt: 'Bagagliaio standard',                        labelEn: 'Standard baggage comp.' },
+      { id: 'shortBagExt',    arm: 3.97,  maxKg: 15,   labelIt: 'Estensione bagagli corta (OAM 42-301)',       labelEn: 'Short baggage ext. (OAM 42-301)' },
       { id: 'deIcingFluid',   arm: 1.00,  maxKg: 27.5, labelIt: 'Liquido anti-ghiaccio (OAM 42-160)',         labelEn: 'De-icing fluid (OAM 42-160)' },
-      { id: 'deIcingFluid2',  arm: 1.52,  maxKg: 30,   labelIt: 'Liquido anti-ghiaccio (OAM 42-160 + 42-309)',labelEn: 'De-icing fluid (OAM 42-160 + 42-309)' },
+      { id: 'deIcingFluid2',  arm: 1.52,  maxKg: 27.5, labelIt: 'Liquido anti-ghiaccio (OAM 42-160 + 42-309)',labelEn: 'De-icing fluid (OAM 42-160 + 42-309)' },
     ],
 
     // CG envelope from EASA TCDS A.005 Issue 44, Section C.III.14
