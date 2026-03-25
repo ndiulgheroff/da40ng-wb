@@ -201,7 +201,7 @@ export const AIRCRAFT_TYPES = {
     label: 'DA20-C1',
 
     fuelSystems: [
-      { id: 'mainFuel', density: 0.72, arm: 0.824, maxLiters: 76,
+      { id: 'mainFuel', density: 0.72, arm: 0.824, maxLiters: 91,
         labelIt: 'Carburante (AVGAS)', labelEn: 'Fuel (AVGAS)' },
     ],
 
@@ -216,31 +216,31 @@ export const AIRCRAFT_TYPES = {
       { id: 'baggageExt',    arm: 1.575, maxKg: 20,  labelIt: 'Estensione bagagliaio',     labelEn: 'Baggage comp. extension', onlyFor: ['OE-CCB'] },
     ],
 
-    // CG envelope from AFM Figure 6.8 (weight-moment chart converted to CG)
-    // Forward limit is a straight line in moment space → curve in CG space
+    // CG envelope from AFM Rev 23, Section 2.8 (DA202-C1)
+    // Datum: tangent to leading edge of wing at root rib
+    // Forward CG: 0.202 m (7.96 in) — constant all weights
+    // Aft CG: 0.317 m (12.49 in) — constant up to 750 kg
     cgEnvelopes: {
-      730: [
-        { mass: 450, cgFwd: -0.089, cgAft: 0.223 },
-        { mass: 550, cgFwd: -0.042, cgAft: 0.223 },
-        { mass: 650, cgFwd: -0.009, cgAft: 0.223 },
-        { mass: 730, cgFwd:  0.011, cgAft: 0.223 },
+      750: [
+        { mass: 450, cgFwd: 0.202, cgAft: 0.317 },
+        { mass: 750, cgFwd: 0.202, cgAft: 0.317 },
       ],
     },
 
     chartScales: {
-      cg:     { min: -0.15, max: 0.30,  step: 0.05, labelStep: 0.05 },
-      mass:   { min: 420,   max: 780,   step: 20,   labelStep: 40 },
-      moment: { min: -70,   max: 180,   step: 20,   labelStep: 40 },
+      cg:     { min: 0.10, max: 0.40,  step: 0.05, labelStep: 0.05 },
+      mass:   { min: 420,  max: 800,   step: 20,   labelStep: 40 },
+      moment: { min: 80,   max: 260,   step: 20,   labelStep: 40 },
     },
 
     fleet: [
-      { registration: 'OE-CCB', lastWeighing: '19/11/2025', emptyWeight: 559.48,  emptyArm: 0.226,  emptyMoment: 126.25,  maxTakeoffMass: 730 },
-      { registration: 'OE-CCE', lastWeighing: '11/04/2025', emptyWeight: 566.74,  emptyArm: 0.191,  emptyMoment: 108.55,  maxTakeoffMass: 730 },
-      { registration: 'OE-CCJ', lastWeighing: '20/11/2025', emptyWeight: 556.84,  emptyArm: 0.192,  emptyMoment: 106.91,  maxTakeoffMass: 730 },
-      { registration: 'OE-CCK', lastWeighing: '08/10/2020', emptyWeight: 551.040, emptyArm: 0.212,  emptyMoment: 116.790, maxTakeoffMass: 730 },
-      { registration: 'OE-CCO', lastWeighing: '20/11/2025', emptyWeight: 568.74,  emptyArm: 0.1886, emptyMoment: 107.266, maxTakeoffMass: 730 },
-      { registration: 'OE-CCL', lastWeighing: '19/12/2025', emptyWeight: 563.30,  emptyArm: 0.189,  emptyMoment: 106.40,  maxTakeoffMass: 730 },
-      { registration: 'OE-CCD', lastWeighing: '05/12/2025', emptyWeight: 557.54,  emptyArm: 0.203,  emptyMoment: 113.45,  maxTakeoffMass: 730 },
+      { registration: 'OE-CCB', lastWeighing: '19/11/2025', emptyWeight: 559.48,  emptyArm: 0.226,  emptyMoment: 126.25,  maxTakeoffMass: 750 },
+      { registration: 'OE-CCE', lastWeighing: '11/04/2025', emptyWeight: 566.74,  emptyArm: 0.191,  emptyMoment: 108.55,  maxTakeoffMass: 750 },
+      { registration: 'OE-CCJ', lastWeighing: '20/11/2025', emptyWeight: 556.84,  emptyArm: 0.192,  emptyMoment: 106.91,  maxTakeoffMass: 750 },
+      { registration: 'OE-CCK', lastWeighing: '08/10/2020', emptyWeight: 551.040, emptyArm: 0.212,  emptyMoment: 116.790, maxTakeoffMass: 750 },
+      { registration: 'OE-CCO', lastWeighing: '20/11/2025', emptyWeight: 568.74,  emptyArm: 0.1886, emptyMoment: 107.266, maxTakeoffMass: 750 },
+      { registration: 'OE-CCL', lastWeighing: '19/12/2025', emptyWeight: 563.30,  emptyArm: 0.189,  emptyMoment: 106.40,  maxTakeoffMass: 750 },
+      { registration: 'OE-CCD', lastWeighing: '05/12/2025', emptyWeight: 557.54,  emptyArm: 0.203,  emptyMoment: 113.45,  maxTakeoffMass: 750 },
     ],
   },
 };
