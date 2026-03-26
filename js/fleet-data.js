@@ -103,8 +103,8 @@ export const AIRCRAFT_TYPES = {
       { id: 'baggageExt',     arm: 4.54,  maxKg: 18,   labelIt: 'Estensione bagagli',                         labelEn: 'Baggage extension' },
       { id: 'stdBaggage',     arm: 3.65,  maxKg: 30,   labelIt: 'Bagagliaio standard',                        labelEn: 'Standard baggage comp.' },
       { id: 'shortBagExt',    arm: 3.97,  maxKg: 15,   labelIt: 'Estensione bagagli corta (OAM 42-301)',       labelEn: 'Short baggage ext. (OAM 42-301)' },
-      { id: 'deIcingFluid',   arm: 1.00,  maxKg: 27.5, labelIt: 'Liquido anti-ghiaccio (OAM 42-160)',         labelEn: 'De-icing fluid (OAM 42-160)' },
-      { id: 'deIcingFluid2',  arm: 1.52,  maxKg: 27.5, labelIt: 'Liquido anti-ghiaccio (OAM 42-160 + 42-309)',labelEn: 'De-icing fluid (OAM 42-160 + 42-309)' },
+      { id: 'deIcingFluid',   arm: 1.00,  maxKg: 27.5, labelIt: 'Liquido anti-ghiaccio (OAM 42-160)',         labelEn: 'De-icing fluid (OAM 42-160)', excludes: 'deIcingFluid2' },
+      { id: 'deIcingFluid2',  arm: 1.52,  maxKg: 27.5, labelIt: 'Liquido anti-ghiaccio (OAM 42-160 + 42-309)',labelEn: 'De-icing fluid (OAM 42-160 + 42-309)', excludes: 'deIcingFluid' },
     ],
 
     // CG envelope from EASA TCDS A.005 Issue 44, Section C.III.14
@@ -163,8 +163,8 @@ export const AIRCRAFT_TYPES = {
       { id: 'baggageExt',     arm: 4.54,  maxKg: 18,   labelIt: 'Estensione bagagli',                         labelEn: 'Baggage extension' },
       { id: 'stdBaggage',     arm: 3.65,  maxKg: 30,   labelIt: 'Bagagliaio standard',                        labelEn: 'Standard baggage comp.' },
       { id: 'shortBagExt',    arm: 3.97,  maxKg: 15,   labelIt: 'Estensione bagagli corta (OAM 42-301)',       labelEn: 'Short baggage ext. (OAM 42-301)' },
-      { id: 'deIcingFluid',   arm: 1.00,  maxKg: 27.5, labelIt: 'Liquido anti-ghiaccio (OAM 42-160)',         labelEn: 'De-icing fluid (OAM 42-160)' },
-      { id: 'deIcingFluid2',  arm: 1.52,  maxKg: 27.5, labelIt: 'Liquido anti-ghiaccio (OAM 42-160 + 42-309)',labelEn: 'De-icing fluid (OAM 42-160 + 42-309)' },
+      { id: 'deIcingFluid',   arm: 1.00,  maxKg: 27.5, labelIt: 'Liquido anti-ghiaccio (OAM 42-160)',         labelEn: 'De-icing fluid (OAM 42-160)', excludes: 'deIcingFluid2' },
+      { id: 'deIcingFluid2',  arm: 1.52,  maxKg: 27.5, labelIt: 'Liquido anti-ghiaccio (OAM 42-160 + 42-309)',labelEn: 'De-icing fluid (OAM 42-160 + 42-309)', excludes: 'deIcingFluid' },
     ],
 
     // CG envelope from EASA TCDS A.005 Issue 44, Section C.III.14
@@ -205,8 +205,24 @@ export const AIRCRAFT_TYPES = {
         labelIt: 'Carburante (AVGAS)', labelEn: 'Fuel (AVGAS)' },
     ],
 
-    tankConfigs: null,
-    defaultTankConfig: null,
+    tankConfigs: {
+      standard91: {
+        id: 'standard91',
+        fuelOverrides: { mainFuel: 91 },
+        labelIt: 'Serbatoio standard S/N C0014+ (91 L)', labelEn: 'Standard tank S/N C0014+ (91 L)',
+      },
+      original80: {
+        id: 'original80',
+        fuelOverrides: { mainFuel: 80 },
+        labelIt: 'Serbatoio originale S/N C0001-C0013 (80 L)', labelEn: 'Original tank S/N C0001-C0013 (80 L)',
+      },
+      alternate76: {
+        id: 'alternate76',
+        fuelOverrides: { mainFuel: 76 },
+        labelIt: 'Serbatoio alternativo Dwg 22-2813 (76 L)', labelEn: 'Alternate tank Dwg 22-2813 (76 L)',
+      },
+    },
+    defaultTankConfig: 'standard91',
 
     maxZeroFuelMass: null,
 

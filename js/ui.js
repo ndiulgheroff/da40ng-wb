@@ -209,9 +209,26 @@ function renderCalcTable() {
   tbody.querySelectorAll('.station-input').forEach(input => {
     const saved = savedMasses[input.dataset.station];
     if (saved) input.value = saved;
-    input.addEventListener('input', () => recalculate());
+    input.addEventListener('input', () => {
+      handleExcludes(input);
+      recalculate();
+    });
     input.addEventListener('change', () => { sanitizeInput(input); recalculate(); });
   });
+}
+
+// --- Mutual Exclusion (e.g. de-icing fluid variants) ---
+function handleExcludes(input) {
+  if (!selectedType) return;
+  const stationId = input.dataset.station;
+  const val = parseFloat(input.value) || 0;
+  if (val <= 0) return;
+  const station = selectedType.loadingStations.find(s => s.id === stationId);
+  if (!station || !station.excludes) return;
+  const other = document.querySelector(`[data-station="${station.excludes}"]`);
+  if (other && parseFloat(other.value) > 0) {
+    other.value = 0;
+  }
 }
 
 // --- Input Sanitization ---
