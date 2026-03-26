@@ -35,7 +35,7 @@ body {
 }
 
 .topbar-brand { display: flex; align-items: center; gap: 10px; }
-.topbar-logo { height: 32px; width: 32px; border-radius: 6px; }
+.topbar-logo { height: 18px; width: 18px; border-radius: 3px; }
 .topbar-title { font-size: 16px; font-weight: bold; }
 .topbar-subtitle { opacity: 0.7; font-size: 13px; margin-left: 12px; }
 
@@ -350,7 +350,7 @@ body {
   body { background: white !important; color: black !important; font-size: 11px; }
   .topbar { background: white !important; color: black !important; border-bottom: 2px solid black; }
   .topbar-title, .topbar-subtitle { color: black !important; opacity: 1 !important; }
-  .topbar-logo { height: 28px; width: 28px; }
+  .topbar-logo { height: 16px; width: 16px; }
   .topbar-actions .lang-btn { display: none; }
   .topbar-actions .btn-reset { display: none; }
   .panel-left .type-btn:not(.active) { display: none; }
